@@ -19,10 +19,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="config\appSettings.example.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="config\appSettings.json">
+    <None Update="config\*.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>

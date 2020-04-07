@@ -21,7 +21,8 @@ namespace NoaaWeb.Service
         private static void ConfigureAppConfiguration(HostBuilderContext ctx, IConfigurationBuilder configBuilder)
         {
             configBuilder
-                .AddJsonFile("./config/appSettings.json")
+                .AddEnvironmentVariables()
+                .AddJsonFile("./config/appSettings.json", optional: true)
                 .Build();
         }
 

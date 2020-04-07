@@ -10,10 +10,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="config\appSettings.example.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="config\appSettings.json">
+    <None Include="config\*.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="wwwroot\style.css" />

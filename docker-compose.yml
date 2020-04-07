@@ -1,0 +1,32 @@
+version: "3.7"
+services:
+  web:
+    image: noaa-web-viewer-web
+    build:
+      context: .
+      dockerfile: Dockerfile.web
+    environment:
+      - "DbDirectory=/app/data"
+      - "WebDav__BaseUri=https://nextcloud.example.com/remote.php/dav/files/noaa-apt/noaa-data/"
+      - "WebDav__User=noaa-apt"
+      - "WebDav__Password=secret"
+    restart: unless-stopped
+    volumes:
+      - db:/app/data/
+
+  service:
+    image: noaa-web-viewer-service
+    build:
+      context: .
+      dockerfile: Dockerfile.service
+    environment:
+      - "DbDirectory=/app/data"
+      - "WebDav__BaseUri=https://nextcloud.example.com/remote.php/dav/files/noaa-apt/noaa-data/"
+      - "WebDav__User=noaa-apt"
+      - "WebDav__Password=secret"
+    restart: unless-stopped
+    volumes:
+      - db:/app/data/
+
+volumes:
+  db:

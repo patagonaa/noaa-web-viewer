@@ -13,7 +13,10 @@ namespace NoaaWeb.App
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>
             Host.CreateDefaultBuilder(args)
-                .ConfigureAppConfiguration(config => config.AddJsonFile("./config/appSettings.json"))
+                .ConfigureAppConfiguration(config =>
+                config
+                    .AddEnvironmentVariables()
+                    .AddJsonFile("./config/appSettings.json", optional: true))
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
                     webBuilder.UseStartup<Startup>();
