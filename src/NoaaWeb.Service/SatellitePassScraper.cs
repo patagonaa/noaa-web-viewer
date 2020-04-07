@@ -119,12 +119,28 @@ namespace NoaaWeb.Service
                 {
                     using (var ms = new MemoryStream())
                     {
-                        thumb.Save(ms, ImageFormat.Png);
+                        var encoderParameters = new EncoderParameters(1);
+                        encoderParameters.Param[0] = new EncoderParameter(Encoder.Quality, 70L);
 
-                        return $"data:image/png;base64,{Convert.ToBase64String(ms.ToArray())}";
+                        thumb.Save(ms, GetEncoder(ImageFormat.Jpeg), encoderParameters);
+
+                        return $"data:image/jpeg;base64,{Convert.ToBase64String(ms.ToArray())}";
                     }
                 }
             }
+        }
+
+        private static ImageCodecInfo GetEncoder(ImageFormat format)
+        {
+            var codecs = ImageCodecInfo.GetImageDecoders();
+            foreach (var codec in codecs)
+            {
+                if (codec.FormatID == format.Guid)
+                {
+                    return codec;
+                }
+            }
+            return null;
         }
     }
 }
