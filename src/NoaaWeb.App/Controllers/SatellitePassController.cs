@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using NoaaWeb.Data;
@@ -21,7 +22,7 @@ namespace NoaaWeb.App.Controllers
         [HttpGet]
         public IEnumerable<SatellitePass> Get()
         {
-            return _passRepository.Get();
+            return _passRepository.Get().OrderByDescending(x => x.StartTime);
         }
     }
 }
