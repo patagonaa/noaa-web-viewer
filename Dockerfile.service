@@ -5,6 +5,8 @@ RUN dotnet restore NoaaWeb.Service/NoaaWeb.Service.csproj
 RUN dotnet publish -c Release NoaaWeb.Service/NoaaWeb.Service.csproj -o /app/build
 
 FROM mcr.microsoft.com/dotnet/core/runtime:3.1
+RUN apt-get update
+RUN apt-get install -y libc6-dev libgdiplus libx11-dev
 WORKDIR /app
 COPY --from=build /app/build/ ./
 ENTRYPOINT ["dotnet", "NoaaWeb.Service.dll"]
