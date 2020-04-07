@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Options;
+﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using System.Collections.Generic;
 using System.IO;
@@ -11,10 +12,12 @@ namespace NoaaWeb.Data
     public class SatellitePassFileRepository : ISatellitePassRepository
     {
         private readonly FileDbConfiguration _dbConfig;
+        private readonly ILogger<SatellitePassFileRepository> _logger;
 
-        public SatellitePassFileRepository(IOptions<FileDbConfiguration> dbConfig)
+        public SatellitePassFileRepository(ILogger<SatellitePassFileRepository> logger, IOptions<FileDbConfiguration> dbConfig)
         {
             _dbConfig = dbConfig.Value;
+            _logger = logger;
         }
 
         public IQueryable<SatellitePass> Get()
@@ -61,7 +64,9 @@ namespace NoaaWeb.Data
                 catch (IOException ioex)
                 {
                     if (ioex.HResult != 32 && ioex.HResult != 33)
-                        throw;
+                    {
+                        _logger.LogWarning(ioex, "Unhandled IOException. Retrying.");
+                    }
                     Thread.Sleep(100);
                 }
             }
