@@ -2,13 +2,34 @@
 
 class ListViewModel {
     constructor() {
-        this.passes = ko.observableArray();
+        this.data = ko.observableArray();
+        this.loading = ko.observable(true);
+
         this.loadPasses();
+
+        window.addEventListener('hashchange', () => this.loadPasses());
     }
 
     async loadPasses() {
-        let data = await fetch('api/SatellitePass');
-        this.passes((await data.json()).map(x => this.mapPasses(x)));
+        this.loading(true);
+
+        let appState = this.getAppState();
+
+        let params = new URLSearchParams();
+
+        let sorter = appState.sorter;
+        if (sorter) {
+            params.set('sortField', sorter.field);
+            params.set('sortDir', sorter.dir);
+        }
+
+        if (appState.page != null) {
+            params.set('page', appState.page);
+        }
+
+        let data = await fetch('api/SatellitePass?' + params.toString());
+        this.data(await data.json());
+        this.loading(false);
     }
 
     mapPasses(pass) {
@@ -17,6 +38,27 @@ class ListViewModel {
             enhancementTypes: this.getEnhancementTypes(pass.enhancementTypes),
             startTime: new Date(pass.startTime)
         };
+    }
+
+    sortClick(fieldName, direction) {
+        let appState = this.getAppState();
+        appState.sorter = { field: fieldName, dir: direction };
+        appState.page = 0;
+        this.setAppState(appState);
+    }
+
+    pageClick(page) {
+        let appState = this.getAppState();
+        appState.page = page;
+        this.setAppState(appState);
+    }
+
+    getAppState() {
+        return window.location.hash ? JSON.parse(decodeURIComponent(window.location.hash.substring(1))) : {};
+    }
+
+    setAppState(state) {
+        window.location.hash = encodeURIComponent(JSON.stringify(state));
     }
 
     getEnhancementTypes(types) {
@@ -54,6 +96,20 @@ class ListViewModel {
                 return 'Produces a false colour image from NOAA APT images based on temperature.';
         }
         return '';
+    }
+
+    getChannelText(channel) {
+        switch (channel) {
+            case '1':
+                return '1 (visible)';
+            case '2':
+                return '2 (near infrared)';
+            case '3/3B':
+                return '3/3B (mid infrared)';
+            case '4':
+                return '4 (thermal infrared)';
+        }
+        return channel;
     }
 }
 

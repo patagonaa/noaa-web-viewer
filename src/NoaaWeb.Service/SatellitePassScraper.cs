@@ -8,6 +8,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading;
 
 namespace NoaaWeb.Service
 {
@@ -25,7 +26,7 @@ namespace NoaaWeb.Service
             _fileProvider = fileProvider;
         }
 
-        public void Scrape()
+        public void Scrape(CancellationToken cancellationToken)
         {
             lock (_scrapeLock)
             {
@@ -35,6 +36,9 @@ namespace NoaaWeb.Service
                 var metaFiles = _fileProvider.GetDirectoryContents("/meta");
                 foreach (var metaFileInfo in metaFiles)
                 {
+                    if (cancellationToken.IsCancellationRequested)
+                        break;
+
                     var fileKey = Path.GetFileNameWithoutExtension(metaFileInfo.Name);
 
                     _logger.LogInformation("scraping {FileKey}", fileKey);
@@ -67,7 +71,7 @@ namespace NoaaWeb.Service
 
                     var channelA = Regex.Match(metaData, @"^CHAN_A=Channel A: (.*) \(.*\)$", RegexOptions.Multiline).Groups[1].Value;
                     var channelB = Regex.Match(metaData, @"^CHAN_B=Channel B: (.*) \(.*\)$", RegexOptions.Multiline).Groups[1].Value;
-                    var gain = double.Parse(Regex.Match(metaData, @"^GAIN=Gain: (.*)$", RegexOptions.Multiline).Groups[1].Value, CultureInfo.InvariantCulture);
+                    var gain = -double.Parse(Regex.Match(metaData, @"^GAIN=Gain: (.*)$", RegexOptions.Multiline).Groups[1].Value, CultureInfo.InvariantCulture);
                     var maxElev = int.Parse(Regex.Match(metaData, @"^MAXELEV=(.*)$", RegexOptions.Multiline).Groups[1].Value, CultureInfo.InvariantCulture);
 
                     var enhancementTypes = EnhancementTypes.Za | EnhancementTypes.No | EnhancementTypes.Therm;

@@ -1,7 +1,4 @@
 ﻿using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Options;
-using System;
-using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using Timer = System.Timers.Timer;
@@ -13,6 +10,8 @@ namespace NoaaWeb.Service
         private readonly Timer _timer;
         private readonly SatellitePassScraper _scraper;
 
+        private readonly CancellationTokenSource _cts = new CancellationTokenSource();
+
         public SatellitePassIndexHost(SatellitePassScraper scraper)
         {
             _timer = new Timer
@@ -20,20 +19,21 @@ namespace NoaaWeb.Service
                 Interval = 60 * 1000,
                 AutoReset = true
             };
-            _timer.Elapsed += (sender, e) => _scraper.Scrape();
+            _timer.Elapsed += (sender, e) => _scraper.Scrape(_cts.Token);
             _scraper = scraper;
         }
 
         public Task StartAsync(CancellationToken cancellationToken)
         {
             _timer.Start();
-            _scraper.Scrape();
+            _scraper.Scrape(cancellationToken);
             return Task.CompletedTask;
         }
 
         public Task StopAsync(CancellationToken cancellationToken)
         {
             _timer.Stop();
+            _cts.Cancel();
             return Task.CompletedTask;
         }
     }

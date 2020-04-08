@@ -2,8 +2,9 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using NoaaWeb.Data;
-using System;
+using Serilog;
 using System.Threading.Tasks;
 
 namespace NoaaWeb.Service
@@ -15,7 +16,19 @@ namespace NoaaWeb.Service
             await Host.CreateDefaultBuilder(args)
                 .ConfigureAppConfiguration(ConfigureAppConfiguration)
                 .ConfigureServices(ConfigureServices)
+                .ConfigureLogging(ConfigureLogging)
                 .RunConsoleAsync();
+        }
+
+        private static void ConfigureLogging(HostBuilderContext hostContext, ILoggingBuilder loggingBuilder)
+        {
+            loggingBuilder.ClearProviders();
+
+            Log.Logger = new LoggerConfiguration()
+                .Enrich.FromLogContext()
+                .WriteTo.Console()
+                .CreateLogger();
+            loggingBuilder.AddSerilog(Log.Logger);
         }
 
         private static void ConfigureAppConfiguration(HostBuilderContext ctx, IConfigurationBuilder configBuilder)

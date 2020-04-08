@@ -10,30 +10,44 @@
 </head>
 <body>
     <div id="main">
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>Start Date</th>
-                    <th>Preview</th>
-                    <th>Channel A</th>
-                    <th>Channel B</th>
-                    <th>Max Elevation</th>
-                    <th>Gain</th>
-                    <th>Enhancement Types</th>
-                </tr>
-            </thead>
-            <tbody data-bind="foreach: passes">
-                <tr>
-                    <td><span data-bind="text: startTime.toISOString()"></span></td>
-                    <td><a data-bind="attr: {href: 'data/images/'+fileKey+'-RAW.png'}" title="Raw Image"><img class="preview" data-bind="attr: {src: thumbnailUri}" /></a></td>
-                    <td><span data-bind="text: channelA"></span></td>
-                    <td><span data-bind="text: channelB"></span></td>
-                    <td><span data-bind="text: maxElevation"></span></td>
-                    <td><span data-bind="text: gain"></span></td>
-                    <td data-bind="foreach: enhancementTypes"><a data-bind="attr: {href: 'data/images/'+$parent.fileKey+'-'+$data+'.png', title: $root.getEnhancementTypeTitle($data)}, text: $data"></a> </td>
-                </tr>
-            </tbody>
-        </table>
+        <div class="container-fluid">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Start Date <a href="#" data-bind="click: function(data, event) { $root.sortClick('StartTime', 'desc'); }">▼</a><a href="#" data-bind="click: function(data, event) { $root.sortClick('StartTime', 'asc'); }">▲</a></th>
+                        <th>Preview</th>
+                        <th>Channel A</th>
+                        <th>Channel B</th>
+                        <th>Max Elevation <a href="#" data-bind="click: function(data, event) { $root.sortClick('MaxElevation', 'desc'); }">▼</a><a href="#" data-bind="click: function(data, event) { $root.sortClick('MaxElevation', 'asc'); }">▲</a></th>
+                        <th>Gain <a href="#" data-bind="click: function(data, event) { $root.sortClick('Gain', 'desc'); }">▼</a><a href="#" data-bind="click: function(data, event) { $root.sortClick('Gain', 'asc'); }">▲</a></th>
+                        <th>Enhancement Types</th>
+                    </tr>
+                </thead>
+                <tbody data-bind="visible: loading">
+                    <tr><td colspan="7">Loading...</td></tr>
+                </tbody>
+                <tbody data-bind="hidden: loading, foreach: data().results ? data().results.map(x => $root.mapPasses(x)) : []">
+                    <tr>
+                        <td><span data-bind="text: startTime.toISOString()"></span></td>
+                        <td><a data-bind="attr: {href: 'data/images/'+fileKey+'-RAW.png'}" title="Raw Image"><img class="preview" data-bind="attr: {src: thumbnailUri}" /></a></td>
+                        <td><span data-bind="text: $root.getChannelText(channelA)"></span></td>
+                        <td><span data-bind="text: $root.getChannelText(channelB)"></span></td>
+                        <td><span data-bind="text: maxElevation"></span>°</td>
+                        <td><span data-bind="text: gain"></span> dB</td>
+                        <td data-bind="foreach: enhancementTypes"><a data-bind="attr: {href: 'data/images/'+$parent.fileKey+'-'+$data+'.png', title: $root.getEnhancementTypeTitle($data)}, text: $data"></a> </td>
+                    </tr>
+                </tbody>
+            </table>
+            <div class="row">
+                <div class="col-12">
+                    <nav>
+                        <ul class="pagination" data-bind="foreach: data().pageCount ? Array.from(Array(data().pageCount).keys()) : []">
+                            <li class="page-item" data-bind="css: {'active': $data == $root.data().page}"><a class="page-link" href="#" data-bind="text: $data+1, click: function() {$root.pageClick($data)}"></a></li>
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+        </div>
     </div>
 </body>
 </html>

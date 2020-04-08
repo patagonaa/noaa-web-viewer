@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using Serilog;
 
 namespace NoaaWeb.App
 {
@@ -11,15 +13,26 @@ namespace NoaaWeb.App
             CreateHostBuilder(args).Build().Run();
         }
 
-        public static IHostBuilder CreateHostBuilder(string[] args) =>
-            Host.CreateDefaultBuilder(args)
+        public static IHostBuilder CreateHostBuilder(string[] args)
+        {
+            return Host.CreateDefaultBuilder(args)
                 .ConfigureAppConfiguration(config =>
-                config
+                    config
                     .AddEnvironmentVariables()
                     .AddJsonFile("./config/appSettings.json", optional: true))
-                .ConfigureWebHostDefaults(webBuilder =>
-                {
-                    webBuilder.UseStartup<Startup>();
-                });
+                .ConfigureLogging(ConfigureLogging)
+                .ConfigureWebHostDefaults(webBuilder => webBuilder.UseStartup<Startup>());
+        }
+
+        private static void ConfigureLogging(HostBuilderContext hostContext, ILoggingBuilder loggingBuilder)
+        {
+            loggingBuilder.ClearProviders();
+
+            Log.Logger = new LoggerConfiguration()
+                .Enrich.FromLogContext()
+                .WriteTo.Console()
+                .CreateLogger();
+            loggingBuilder.AddSerilog(Log.Logger);
+        }
     }
 }
