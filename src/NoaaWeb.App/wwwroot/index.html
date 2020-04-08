@@ -25,12 +25,12 @@
             <tbody data-bind="foreach: passes">
                 <tr>
                     <td><span data-bind="text: startTime.toISOString()"></span></td>
-                    <td><a data-bind="attr: {href: 'data/images/'+fileKey+'-RAW.png'}"><img class="preview" data-bind="attr: {src: thumbnailUri}" /></a></td>
+                    <td><a data-bind="attr: {href: 'data/images/'+fileKey+'-RAW.png'}" title="Raw Image"><img class="preview" data-bind="attr: {src: thumbnailUri}" /></a></td>
                     <td><span data-bind="text: channelA"></span></td>
                     <td><span data-bind="text: channelB"></span></td>
                     <td><span data-bind="text: maxElevation"></span></td>
                     <td><span data-bind="text: gain"></span></td>
-                    <td data-bind="foreach: enhancementTypes"><a data-bind="attr: {href: 'data/images/'+$parent.fileKey+'-'+$data+'.png'}, text: $data"></a> </td>
+                    <td data-bind="foreach: enhancementTypes"><a data-bind="attr: {href: 'data/images/'+$parent.fileKey+'-'+$data+'.png', title: $root.getEnhancementTypeTitle($data)}, text: $data"></a> </td>
                 </tr>
             </tbody>
         </table>
