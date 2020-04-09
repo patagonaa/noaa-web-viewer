@@ -74,7 +74,7 @@ namespace NoaaWeb.Service
                     var gain = -double.Parse(Regex.Match(metaData, @"^GAIN=Gain: (.*)$", RegexOptions.Multiline).Groups[1].Value, CultureInfo.InvariantCulture);
                     var maxElev = int.Parse(Regex.Match(metaData, @"^MAXELEV=(.*)$", RegexOptions.Multiline).Groups[1].Value, CultureInfo.InvariantCulture);
 
-                    var enhancementTypes = EnhancementTypes.Za | EnhancementTypes.No | EnhancementTypes.Therm;
+                    var enhancementTypes = (EnhancementTypes)0;
 
                     if (new[] { channelA, channelB }.Any(x => x == "4") && new[] { channelA, channelB }.Any(x => x == "1" || x == "2"))
                     {
@@ -84,6 +84,9 @@ namespace NoaaWeb.Service
                     if (new[] { channelA, channelB }.Any(x => x == "4"))
                     {
                         enhancementTypes |= EnhancementTypes.Mcir;
+                        enhancementTypes |= EnhancementTypes.Therm;
+                        enhancementTypes |= EnhancementTypes.Za;
+                        enhancementTypes |= EnhancementTypes.No;
                     }
 
                     var toInsert = new SatellitePass
