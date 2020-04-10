@@ -13,5 +13,6 @@ namespace NoaaWeb.Data
         public double Gain { get; set; }
         public EnhancementTypes EnhancementTypes { get; set; }
         public string ThumbnailUri { get; set; }
+        public string ThumbnailEnhancementType { get; set; }
     }
 }

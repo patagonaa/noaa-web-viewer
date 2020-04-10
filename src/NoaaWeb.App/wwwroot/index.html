@@ -29,7 +29,7 @@
                 <tbody data-bind="hidden: loading, foreach: data().results ? data().results.map(x => $root.mapPasses(x)) : []">
                     <tr>
                         <td><span data-bind="text: startTime.toISOString()"></span></td>
-                        <td><a data-bind="attr: {href: 'data/images/'+fileKey+'-RAW.png'}" title="Raw Image"><img class="preview" data-bind="attr: {src: thumbnailUri}" /></a></td>
+                        <td><a data-bind="attr: {href: 'data/images/'+fileKey+'-'+thumbnailEnhancementType+'.png', title: thumbnailEnhancementType+' image'}"><img class="preview" data-bind="attr: {src: thumbnailUri}" /></a></td>
                         <td><span data-bind="text: $root.getChannelText(channelA)"></span></td>
                         <td><span data-bind="text: $root.getChannelText(channelB)"></span></td>
                         <td><span data-bind="text: maxElevation"></span>°</td>

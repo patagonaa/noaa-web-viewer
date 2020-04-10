@@ -1,4 +1,5 @@
 ﻿using FileProviders.WebDav;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Logging;
 using NoaaWeb.Data;
 using System;
@@ -101,9 +102,28 @@ namespace NoaaWeb.Service
                         EnhancementTypes = enhancementTypes
                     };
 
-                    using (var rawImageStream = rawImage.CreateReadStream())
+                    IFileInfo thumbnailSource = null;
+                    string thumbnailEnhancementType = null;
+                    if (enhancementTypes.HasFlag(EnhancementTypes.Msa))
                     {
-                        toInsert.ThumbnailUri = GetThumbnail(rawImageStream);
+                        var msaImage = _fileProvider.GetFileInfo($"images/{fileKey}-MSA.png");
+
+                        if (msaImage.Exists)
+                        {
+                            thumbnailSource = msaImage;
+                            thumbnailEnhancementType = "MSA";
+                        }
+                    }
+                    if (thumbnailSource == null)
+                    {
+                        thumbnailSource = rawImage;
+                        thumbnailEnhancementType = "RAW";
+                    }
+
+                    using (var imageStream = thumbnailSource.CreateReadStream())
+                    {
+                        toInsert.ThumbnailUri = GetThumbnail(imageStream);
+                        toInsert.ThumbnailEnhancementType = thumbnailEnhancementType;
                     }
 
                     _satellitePassRepository.Insert(toInsert);

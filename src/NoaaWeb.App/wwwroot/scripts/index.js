@@ -63,6 +63,8 @@ class ListViewModel {
 
     getEnhancementTypes(types) {
         let toReturn = [];
+        toReturn.push('RAW');
+
         if (types & (1 << 0)) {
             toReturn.push('ZA');
         }
