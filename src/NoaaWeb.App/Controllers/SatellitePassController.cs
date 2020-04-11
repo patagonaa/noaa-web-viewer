@@ -11,7 +11,7 @@ namespace NoaaWeb.App.Controllers
     [Route("api/[controller]")]
     public class SatellitePassController : ControllerBase
     {
-        private const int _pageSize = 5;
+        private const int _pageSize = 20;
 
         private readonly ILogger<SatellitePassController> _logger;
         private readonly ISatellitePassRepository _passRepository;
