@@ -1,8 +1,35 @@
 ﻿body {
 }
 
+#main.theme-dark {
+    background: #292e33;
+}
+
 img.preview {
     max-height: 200px;
     max-width: 500px;
     width: auto;
+}
+
+.table tr.upcoming-pass {
+    background-color: #eee;
+}
+
+.table-dark tr.upcoming-pass {
+    background-color: #57616b;
+}
+
+.theme-dark .attribution {
+    color: #fff;
+}
+
+.theme-dark .page-item .page-link {
+    background-color: #343a40;
+    border-color: #95999c;
+    color: #fff;
+}
+.theme-dark .page-item.active .page-link {
+    background-color: #eee;
+    border-color: #95999c;
+    color: #343a40;
 }

@@ -1,6 +1,8 @@
-﻿
+﻿class AppViewModel {
+    public data: KnockoutObservableArray<SatellitePassResult>;
+    public loading: KnockoutObservable<boolean>;
+    public darkMode: boolean = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
 
-class ListViewModel {
     constructor() {
         this.data = ko.observableArray();
         this.loading = ko.observable(true);
@@ -24,67 +26,71 @@ class ListViewModel {
         }
 
         if (appState.page != null) {
-            params.set('page', appState.page);
+            params.set('page', appState.page.toString());
         }
 
         let data = await fetch('api/SatellitePass?' + params.toString());
-        this.data(await data.json());
+        this.data(<SatellitePassResult[]>await data.json());
         this.loading(false);
     }
 
-    mapPasses(pass) {
-        return {
+    mapPasses(pass: any) {
+        return <SatellitePassViewModel>{
             ...pass,
             enhancementTypes: this.getEnhancementTypes(pass.enhancementTypes),
             startTime: new Date(pass.startTime)
         };
     }
 
-    sortClick(fieldName, direction) {
+    sortClick(fieldName: string, direction: 'asc'|'desc') {
         let appState = this.getAppState();
         appState.sorter = { field: fieldName, dir: direction };
         appState.page = 0;
         this.setAppState(appState);
     }
 
-    pageClick(page) {
+    pageClick(page: number) {
         let appState = this.getAppState();
         appState.page = page;
         this.setAppState(appState);
     }
 
-    getAppState() {
+    getAppState(): AppState {
         return window.location.hash ? JSON.parse(decodeURIComponent(window.location.hash.substring(1))) : {};
     }
 
-    setAppState(state) {
+    setAppState(state: AppState) {
         window.location.hash = encodeURIComponent(JSON.stringify(state));
     }
 
-    getEnhancementTypes(types) {
-        let toReturn = [];
+    getEnhancementTypes(types?: EnhancementTypes) {
+        let toReturn: string[] = [];
+
+        if (types == null)
+            return toReturn;
+
         toReturn.push('RAW');
 
-        if (types & (1 << 0)) {
+        if (types & EnhancementTypes.Za) {
             toReturn.push('ZA');
         }
-        if (types & (1 << 1)) {
+        if (types & EnhancementTypes.No) {
             toReturn.push('NO');
         }
-        if (types & (1 << 2)) {
+        if (types & EnhancementTypes.Msa) {
             toReturn.push('MSA');
         }
-        if (types & (1 << 3)) {
+        if (types & EnhancementTypes.Mcir) {
             toReturn.push('MCIR');
         }
-        if (types & (1 << 4)) {
+        if (types & EnhancementTypes.Therm) {
             toReturn.push('THERM');
         }
 
         return toReturn;
     }
 
-    getEnhancementTypeTitle(type) {
+    getEnhancementTypeTitle(type: string) {
         switch (type) {
             case 'ZA':
                 return 'NOAA general purpose meteorological IR enhancement option.';
@@ -100,7 +106,7 @@ class ListViewModel {
         return '';
     }
 
-    getChannelText(channel) {
+    getChannelText(channel: string) {
         switch (channel) {
             case '1':
                 return '1 (visible)';
@@ -117,8 +123,42 @@ class ListViewModel {
     }
 }
 
+interface AppState {
+    page?: number;
+    sorter?: { field: string, dir: 'asc' | 'desc' };
+    filters: { name: string, value: any }[]
+}
+
+interface SatellitePassResult {
+    page: number;
+    pageCount: number;
+    results: any[];
+}
+
+interface SatellitePassViewModel {
+    fileKey: string;
+    startTime: Date;
+    satelliteName: string;
+    channelA: string;
+    channelB: string;
+    maxElevation: number;
+    gain?: number;
+    enhancementTypes?: EnhancementTypes;
+    thumbnailUri: string;
+    thumbnailEnhancementType: string;
+    isUpcomingPass: boolean;
+}
+
+enum EnhancementTypes {
+    Za = 1 << 0,
+    No = 1 << 1,
+    Msa = 1 << 2,
+    Mcir = 1 << 3,
+    Therm = 1 << 4
+}
+
 function init() {
-    ko.applyBindings(new ListViewModel(), document.getElementById("main"));
+    ko.applyBindings(new AppViewModel(), document.getElementById("main"));
 }
 
 window.onload = init;

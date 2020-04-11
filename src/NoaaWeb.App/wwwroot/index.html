@@ -10,9 +10,9 @@
     <script type='text/javascript' src='scripts/index.js'></script>
 </head>
 <body>
-    <div id="main">
+    <div id="main" data-bind="css: {'theme-dark': darkMode}">
         <div class="container-fluid">
-            <table class="table">
+            <table class="table" data-bind="css: {'table-dark': darkMode}">
                 <thead>
                     <tr>
                         <th>Start Date <a href="#" data-bind="click: function(data, event) { $root.sortClick('StartTime', 'desc'); }">▼</a><a href="#" data-bind="click: function(data, event) { $root.sortClick('StartTime', 'asc'); }">▲</a></th>
@@ -29,7 +29,7 @@
                     <tr><td colspan="7">Loading...</td></tr>
                 </tbody>
                 <tbody data-bind="hidden: loading, foreach: data().results ? data().results.map(x => $root.mapPasses(x)) : []">
-                    <tr>
+                    <tr data-bind="css: {'upcoming-pass': isUpcomingPass}">
                         <td><span data-bind="text: startTime.toLocaleString(), attr: {title: startTime.toISOString()}"></span></td>
                         <td><span data-bind="text: satelliteName"></span></td>
                         <td><span data-bind="if: !isUpcomingPass"><a data-bind="attr: {href: 'data/images/'+fileKey+'-'+thumbnailEnhancementType+'.png', title: thumbnailEnhancementType+' image'}"><img class="preview" data-bind="attr: {src: thumbnailUri}" /></a></span><span data-bind="if: isUpcomingPass">not yet recorded/processed</span></td>
