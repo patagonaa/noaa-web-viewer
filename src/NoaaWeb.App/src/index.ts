@@ -1,10 +1,14 @@
-﻿class AppViewModel {
+﻿import * as ko from "knockout";
+import 'bootstrap/dist/css/bootstrap.min.css';
+import './style.css';
+
+class AppViewModel {
     public data: KnockoutObservableArray<SatellitePassResult>;
     public loading: KnockoutObservable<boolean>;
     public darkMode: boolean = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
 
     constructor() {
-        this.data = ko.observableArray();
+        this.data = ko.observableArray([]);
         this.loading = ko.observable(true);
 
         this.loadPasses();

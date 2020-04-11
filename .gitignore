@@ -2,5 +2,5 @@
 bin/
 obj/
 appSettings.json
-/src/NoaaWeb.App/wwwroot/scripts/index.js
-/src/NoaaWeb.App/wwwroot/scripts/index.js.map
+/src/NoaaWeb.App/wwwroot/
+node_modules/
