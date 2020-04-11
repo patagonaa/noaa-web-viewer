@@ -1,6 +1,12 @@
 ﻿body {
 }
 
+@media (prefers-color-scheme: dark) {
+    html, body {
+        background: #292e33;
+    }
+}
+
 #main.theme-dark {
     background: #292e33;
 }
@@ -28,6 +34,7 @@ img.preview {
     border-color: #95999c;
     color: #fff;
 }
+
 .theme-dark .page-item.active .page-link {
     background-color: #eee;
     border-color: #95999c;
