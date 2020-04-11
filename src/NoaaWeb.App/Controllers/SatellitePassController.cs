@@ -15,17 +15,46 @@ namespace NoaaWeb.App.Controllers
 
         private readonly ILogger<SatellitePassController> _logger;
         private readonly ISatellitePassRepository _passRepository;
+        private readonly IUpcomingPassRepository _upcomingPassRepository;
 
-        public SatellitePassController(ILogger<SatellitePassController> logger, ISatellitePassRepository passRepository)
+        public SatellitePassController(ILogger<SatellitePassController> logger, ISatellitePassRepository passRepository, IUpcomingPassRepository upcomingPassRepository)
         {
             _logger = logger;
             _passRepository = passRepository;
+            _upcomingPassRepository = upcomingPassRepository;
         }
 
         [HttpGet]
         public SatellitePassResult Get(string sortField, string sortDir, int page = 0)
         {
-            var data = _passRepository.Get();
+            var passes = _passRepository.Get().ToList(); // todo: when/if this is a real database some day, we really shouldn't do ToList here...
+
+            var latestPassTime = passes.Max(x => x.StartTime);
+            var upcomingPasses = _upcomingPassRepository.Get()
+                .Where(x => x.StartTime > latestPassTime)
+                .OrderBy(x => x.StartTime)
+                .Take(5);
+
+            var data = passes.Select(x => new SatellitePassViewModel
+            {
+                FileKey = x.FileKey,
+                StartTime = x.StartTime,
+                SatelliteName = x.SatelliteName,
+                ChannelA = x.ChannelA,
+                ChannelB = x.ChannelB,
+                MaxElevation = x.MaxElevation,
+                Gain = x.Gain,
+                EnhancementTypes = x.EnhancementTypes,
+                ThumbnailUri = x.ThumbnailUri,
+                ThumbnailEnhancementType = x.ThumbnailEnhancementType,
+                IsUpcomingPass = false
+            }).Concat(upcomingPasses.Select(x => new SatellitePassViewModel
+            {
+                StartTime = x.StartTime,
+                SatelliteName = x.SatelliteName,
+                MaxElevation = x.MaxElevation,
+                IsUpcomingPass = true
+            }));
 
             if (sortField == null)
             {

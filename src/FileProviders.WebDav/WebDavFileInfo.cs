@@ -25,7 +25,7 @@ namespace FileProviders.WebDav
 
         public string Name => Path.GetFileName(_resource.Uri);
 
-        public DateTimeOffset LastModified => _resource.LastModifiedDate ?? DateTime.MinValue;
+        public DateTimeOffset LastModified => _resource.LastModifiedDate ?? DateTimeOffset.MinValue;
 
         public bool IsDirectory => _resource.IsCollection;
 

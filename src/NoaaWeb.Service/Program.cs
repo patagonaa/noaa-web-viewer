@@ -44,10 +44,15 @@ namespace NoaaWeb.Service
             services.Configure<FileDbConfiguration>(ctx.Configuration);
             services.Configure<WebDavConfiguration>(ctx.Configuration.GetSection("WebDav"));
 
-            services.AddTransient<ISatellitePassRepository, SatellitePassFileRepository>();
-            services.AddTransient<SatellitePassScraper>();
             services.AddTransient<WebDavFileProvider>();
+
+            services.AddTransient<ISatellitePassRepository, SatellitePassFileRepository>();
+            services.AddSingleton<SatellitePassScraper>();
             services.AddHostedService<SatellitePassIndexHost>();
+
+            services.AddTransient<IUpcomingPassRepository, UpcomingPassFileRepository>();
+            services.AddSingleton<UpcomingPassScraper>();
+            services.AddHostedService<UpcomingPassIndexHost>();
         }
     }
 }

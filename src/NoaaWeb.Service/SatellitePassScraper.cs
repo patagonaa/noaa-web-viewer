@@ -31,7 +31,7 @@ namespace NoaaWeb.Service
         {
             lock (_scrapeLock)
             {
-                _logger.LogInformation("starting scrape");
+                _logger.LogInformation("starting pass scrape");
                 var existingPasses = _satellitePassRepository.Get().Select(x => x.FileKey).ToHashSet();
 
                 var metaFiles = _fileProvider.GetDirectoryContents("/meta");

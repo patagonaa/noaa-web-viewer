@@ -110,6 +110,8 @@ class ListViewModel {
                 return '3/3B (mid infrared)';
             case '4':
                 return '4 (thermal infrared)';
+            case '5':
+                return '5 (thermal infrared)';
         }
         return channel;
     }

@@ -3,12 +3,9 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using NoaaWeb.Data;
-using System;
-using System.Net;
 
 namespace NoaaWeb.App
 {
@@ -28,6 +25,7 @@ namespace NoaaWeb.App
 
             services.AddControllers();
             services.AddSingleton<ISatellitePassRepository, SatellitePassFileRepository>();
+            services.AddSingleton<IUpcomingPassRepository, UpcomingPassFileRepository>();
             services.Configure<WebDavConfiguration>(Configuration.GetSection("WebDav"));
             services.Configure<FileDbConfiguration>(Configuration);
         }
