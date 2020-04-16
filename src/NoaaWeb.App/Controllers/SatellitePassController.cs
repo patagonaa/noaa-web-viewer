@@ -43,7 +43,7 @@ namespace NoaaWeb.App.Controllers
                 ChannelA = x.ChannelA,
                 ChannelB = x.ChannelB,
                 MaxElevation = x.MaxElevation,
-                Gain = x.Gain,
+                Gain = double.IsNaN(x.Gain) ? -1000 : x.Gain,
                 EnhancementTypes = x.EnhancementTypes,
                 ThumbnailUri = x.ThumbnailUri,
                 ThumbnailEnhancementType = x.ThumbnailEnhancementType,
