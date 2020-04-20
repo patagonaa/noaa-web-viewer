@@ -37,6 +37,7 @@ namespace NoaaWeb.App.Controllers
 
             var data = passes.Select(x => new SatellitePassViewModel
             {
+                ImageDir = x.ImageDir,
                 FileKey = x.FileKey,
                 StartTime = x.StartTime,
                 SatelliteName = x.SatelliteName,

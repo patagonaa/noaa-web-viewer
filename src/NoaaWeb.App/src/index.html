@@ -28,12 +28,12 @@
                     <tr data-bind="css: {'upcoming-pass': isUpcomingPass}">
                         <td><span data-bind="text: startTime.toLocaleString(), attr: {title: startTime.toISOString()}"></span></td>
                         <td><span data-bind="text: satelliteName"></span></td>
-                        <td><span data-bind="if: !isUpcomingPass"><a data-bind="attr: {href: 'data/images/'+fileKey+'-'+thumbnailEnhancementType+'.png', title: thumbnailEnhancementType+' image'}"><img class="preview" data-bind="attr: {src: thumbnailUri}" /></a></span><span data-bind="if: isUpcomingPass">not yet recorded/processed</span></td>
+                        <td><span data-bind="if: !isUpcomingPass"><a data-bind="attr: {href: 'data/'+imageDir+'/'+fileKey+'-'+thumbnailEnhancementType+'.png', title: thumbnailEnhancementType+' image'}"><img class="preview" data-bind="attr: {src: thumbnailUri}" /></a></span><span data-bind="if: isUpcomingPass">not yet recorded/processed</span></td>
                         <td data-bind="if: !isUpcomingPass"><span data-bind="text: $root.getChannelText(channelA)"></span></td>
                         <td data-bind="if: !isUpcomingPass"><span data-bind="text: $root.getChannelText(channelB)"></span></td>
                         <td><span data-bind="text: maxElevation"></span>°</td>
                         <td data-bind="if: !isUpcomingPass"><span data-bind="text: gain"></span> dB</td>
-                        <td data-bind="foreach: isUpcomingPass ? [] : enhancementTypes"><a data-bind="attr: {href: 'data/images/'+$parent.fileKey+'-'+$data+'.png', title: $root.getEnhancementTypeTitle($data)}, text: $data"></a> </td>
+                        <td data-bind="foreach: isUpcomingPass ? [] : enhancementTypes"><a data-bind="attr: {href: 'data/'+$parent. imageDir+'/'+$parent.fileKey+'-'+$data+'.png', title: $root.getEnhancementTypeTitle($data)}, text: $data"></a> </td>
                     </tr>
                 </tbody>
             </table>

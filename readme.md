@@ -9,14 +9,18 @@ right now, the noaa data has to be in a specific directory structure in a WebDAV
 - / (the configured WebDAV data directory)
     - upcoming_passes.txt
     - meta/
-        - 20200407-195220-NOAA18.txt
+        - 2020/
+            - 04/
+                - 20200407-195220-NOAA18.txt
     - images/
-        - 20200407-195220-NOAA18-RAW.png
-        - 20200407-195220-NOAA18-ZA.png
-        - 20200407-195220-NOAA18-NO.png
-        - 20200407-195220-NOAA18-MSA.png
-        - 20200407-195220-NOAA18-MCIR.png
-        - 20200407-195220-NOAA18-THERM.png
+        - 2020/
+            - 04/
+                - 20200407-195220-NOAA18-RAW.png
+                - 20200407-195220-NOAA18-ZA.png
+                - 20200407-195220-NOAA18-NO.png
+                - 20200407-195220-NOAA18-MSA.png
+                - 20200407-195220-NOAA18-MCIR.png
+                - 20200407-195220-NOAA18-THERM.png
 
 This is designed to work with https://github.com/patagonaa/wx-ground-station so look there for further reference on the file formats defined below:
 

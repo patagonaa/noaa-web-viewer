@@ -49,7 +49,7 @@ namespace FileProviders.WebDav
                 throw new WebException("WebDav error " + result.StatusCode + " while listing directory");
             }
 
-            return new WebDavDirectoryContents(_client, result.Resources);
+            return new WebDavDirectoryContents(_client, result.Resources.Skip(1).ToList()); // Skip directory itself
         }
 
         public IFileInfo GetFileInfo(string subpath)

@@ -21,7 +21,7 @@ namespace FileProviders.WebDav
 
         public IEnumerator<IFileInfo> GetEnumerator()
         {
-            return _resources.Select(x => new WebDavFileInfo(_client, x)).Where(x => x.Name != string.Empty).GetEnumerator();
+            return _resources.Select(x => new WebDavFileInfo(_client, x)).GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator()

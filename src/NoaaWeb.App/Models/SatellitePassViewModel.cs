@@ -5,6 +5,7 @@ namespace NoaaWeb.App.Models
 {
     public class SatellitePassViewModel
     {
+        public string ImageDir { get; set; }
         public string FileKey { get; set; }
         public DateTime StartTime { get; set; }
         public string SatelliteName { get; set; }

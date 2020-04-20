@@ -14,5 +14,6 @@ namespace NoaaWeb.Data
         public EnhancementTypes EnhancementTypes { get; set; }
         public string ThumbnailUri { get; set; }
         public string ThumbnailEnhancementType { get; set; }
+        public string ImageDir { get; set; }
     }
 }
