@@ -1,7 +1,7 @@
 ﻿using FileProviders.WebDav;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Logging;
-using NoaaWeb.Data;
+using NoaaWeb.Data.SatellitePass;
 using System;
 using System.Drawing;
 using System.Drawing.Imaging;
@@ -80,6 +80,13 @@ namespace NoaaWeb.Service
                                 metaData = sr.ReadToEnd();
                             }
 
+                            var endTimeMatch = Regex.Match(metaData, @"^END_TIME=(.*)$", RegexOptions.Multiline);
+                            DateTime? endTime = null;
+                            if (endTimeMatch.Success)
+                            {
+                                endTime = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc).AddSeconds(double.Parse(endTimeMatch.Groups[1].Value));
+                            }
+
                             var channelA = Regex.Match(metaData, @"^CHAN_A=Channel A: (.*) \(.*\)$", RegexOptions.Multiline).Groups[1].Value;
                             var channelB = Regex.Match(metaData, @"^CHAN_B=Channel B: (.*) \(.*\)$", RegexOptions.Multiline).Groups[1].Value;
                             var gain = -double.Parse(Regex.Match(metaData, @"^GAIN=Gain: (.*)$", RegexOptions.Multiline).Groups[1].Value, CultureInfo.InvariantCulture);
@@ -105,6 +112,7 @@ namespace NoaaWeb.Service
                                 ImageDir = imageDir,
                                 FileKey = fileKey,
                                 StartTime = startTime,
+                                EndTime = endTime,
                                 SatelliteName = satName,
                                 ChannelA = channelA,
                                 ChannelB = channelB,

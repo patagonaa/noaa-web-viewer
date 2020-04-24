@@ -1,6 +1,6 @@
 ﻿using FileProviders.WebDav;
 using Microsoft.Extensions.Logging;
-using NoaaWeb.Data;
+using NoaaWeb.Data.UpcomingPass;
 using System;
 using System.Globalization;
 using System.IO;
@@ -63,6 +63,7 @@ namespace NoaaWeb.Service
                             _upcomingPassRepository.Insert(new UpcomingSatellitePass
                             {
                                 StartTime = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc).AddSeconds(int.Parse(splitLine[0], CultureInfo.InvariantCulture)),
+                                EndTime = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc).AddSeconds(int.Parse(splitLine[1], CultureInfo.InvariantCulture)),
                                 SatelliteName = splitLine[4].Replace(" ", ""),
                                 MaxElevation = int.Parse(splitLine[2], CultureInfo.InvariantCulture)
                             });

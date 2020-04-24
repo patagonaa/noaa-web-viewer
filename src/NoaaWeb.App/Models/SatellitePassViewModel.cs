@@ -1,4 +1,4 @@
-﻿using NoaaWeb.Data;
+﻿using NoaaWeb.Data.SatellitePass;
 using System;
 
 namespace NoaaWeb.App.Models
@@ -8,6 +8,7 @@ namespace NoaaWeb.App.Models
         public string ImageDir { get; set; }
         public string FileKey { get; set; }
         public DateTime StartTime { get; set; }
+        public DateTime? EndTime { get; set; }
         public string SatelliteName { get; set; }
         public string ChannelA { get; set; }
         public string ChannelB { get; set; }

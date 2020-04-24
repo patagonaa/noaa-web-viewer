@@ -33,11 +33,15 @@ This is designed to work with https://github.com/patagonaa/wx-ground-station so 
 
 meta files look something like this:
 ```
-[...]
-GAIN=Gain: 13.2
-CHAN_A=Channel A: 3/3B (mid infrared)
+START_TIME=1587739795
+END_TIME=1587740632
+RECORD_END_TIME=1587740632
+TLE1=[...]
+TLE2=[...]
+GAIN=Gain: 59.5
+CHAN_A=Channel A: 2 (near infrared)
 CHAN_B=Channel B: 4 (thermal infrared)
-MAXELEV=80
+MAXELEV=22
 ```
 
 ## TODO:

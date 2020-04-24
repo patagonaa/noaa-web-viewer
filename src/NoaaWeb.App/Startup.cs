@@ -6,6 +6,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using NoaaWeb.Data;
+using NoaaWeb.Data.SatellitePass;
+using NoaaWeb.Data.UpcomingPass;
 
 namespace NoaaWeb.App
 {

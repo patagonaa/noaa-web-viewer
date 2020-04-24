@@ -1,14 +1,13 @@
 ﻿using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
 
-namespace NoaaWeb.Data
+namespace NoaaWeb.Data.UpcomingPass
 {
     public class UpcomingPassFileRepository : IUpcomingPassRepository
     {
@@ -86,19 +85,5 @@ namespace NoaaWeb.Data
                 }
             }
         }
-    }
-
-    public interface IUpcomingPassRepository
-    {
-        IQueryable<UpcomingSatellitePass> Get();
-        void Insert(UpcomingSatellitePass pass);
-        void Clear();
-    }
-
-    public class UpcomingSatellitePass
-    {
-        public DateTime StartTime { get; set; }
-        public string SatelliteName { get; set; }
-        public int MaxElevation { get; set; }
     }
 }

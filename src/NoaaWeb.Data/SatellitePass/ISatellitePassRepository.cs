@@ -1,6 +1,6 @@
 ﻿using System.Linq;
 
-namespace NoaaWeb.Data
+namespace NoaaWeb.Data.SatellitePass
 {
     public interface ISatellitePassRepository
     {

@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace NoaaWeb.Data
+namespace NoaaWeb.Data.SatellitePass
 {
     [Flags]
     public enum EnhancementTypes

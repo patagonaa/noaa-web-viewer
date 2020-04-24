@@ -3,7 +3,8 @@ using System.Linq;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using NoaaWeb.App.Models;
-using NoaaWeb.Data;
+using NoaaWeb.Data.SatellitePass;
+using NoaaWeb.Data.UpcomingPass;
 
 namespace NoaaWeb.App.Controllers
 {
@@ -40,6 +41,7 @@ namespace NoaaWeb.App.Controllers
                 ImageDir = x.ImageDir,
                 FileKey = x.FileKey,
                 StartTime = x.StartTime,
+                EndTime = x.EndTime,
                 SatelliteName = x.SatelliteName,
                 ChannelA = x.ChannelA,
                 ChannelB = x.ChannelB,
@@ -52,6 +54,7 @@ namespace NoaaWeb.App.Controllers
             }).Concat(upcomingPasses.Select(x => new SatellitePassViewModel
             {
                 StartTime = x.StartTime,
+                EndTime = x.EndTime,
                 SatelliteName = x.SatelliteName,
                 MaxElevation = x.MaxElevation,
                 IsUpcomingPass = true

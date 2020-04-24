@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 
-namespace NoaaWeb.Data
+namespace NoaaWeb.Data.SatellitePass
 {
     public class SatellitePassFileRepository : ISatellitePassRepository
     {

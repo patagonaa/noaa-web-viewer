@@ -4,6 +4,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using NoaaWeb.Data;
+using NoaaWeb.Data.SatellitePass;
+using NoaaWeb.Data.UpcomingPass;
 using Serilog;
 using System.Threading.Tasks;
 
