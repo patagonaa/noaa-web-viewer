@@ -1,0 +1,60 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>NOAA-Web-Viewer</title>
+    <link rel="shortcut icon" type="image/x-icon" href="icon.png">
+    <style>
+        body {
+            height: 100%;
+            width: 100%;
+            position: absolute;
+            display: flex;
+        }
+
+        #main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        div.projection {
+            position: relative;
+            flex-basis: 0%;
+            flex: 1;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+        }
+
+        img.projection {
+            position: absolute;
+            max-height: 100%;
+            width: auto;
+            max-width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div id="main" data-bind="css: {'theme-dark': darkMode}">
+        <nav class="navbar navbar-lg navbar-light bg-light">
+            <div class="my-2 my-lg-0">
+                <button class="btn btn-primary my-2 my-sm-0" data-bind="click: last, enable: pastItems().length > 0, text: pastItems().length > 0 ? new Date(pastItems()[0].startTime).toLocaleString() : 'Last'">Last</button>
+                <select data-bind="options: getProjectionTypes(currentItem().projectionTypes), optionsText: 'key', optionsValue: 'value', value: projectionType"></select>
+                <span data-bind="visible: loading">Loading...</span>
+                <span data-bind="visible: imageLoading">Loading Image...</span>
+            </div>
+            <div class="justify-content-md-center">
+                <a class="btn btn-secondary my-2 my-sm-0" href="index.html">Back</a>
+            </div>
+            <div class="form-inline my-2 my-lg-0">
+                <button class="btn btn-primary my-2 my-sm-0" data-bind="click: next, enable: futureItems().length > 0, text: futureItems().length > 0 ? new Date(futureItems()[0].startTime).toLocaleString() : 'Next'">Next</button>
+            </div>
+        </nav>
+
+        <div class="projection">
+            <img class="projection" id="projection-image"/>
+        </div>
+    </div>
+</body>
+</html>

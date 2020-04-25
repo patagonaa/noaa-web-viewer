@@ -19,6 +19,7 @@
                         <th>Max Elevation <a href="#" data-bind="click: function(data, event) { $root.sortClick('MaxElevation', 'desc'); }">▼</a><a href="#" data-bind="click: function(data, event) { $root.sortClick('MaxElevation', 'asc'); }">▲</a></th>
                         <th>Gain <a href="#" data-bind="click: function(data, event) { $root.sortClick('Gain', 'desc'); }">▼</a><a href="#" data-bind="click: function(data, event) { $root.sortClick('Gain', 'asc'); }">▲</a></th>
                         <th>Enhancement Types</th>
+                        <th>Projection</th>
                     </tr>
                 </thead>
                 <tbody data-bind="visible: loading">
@@ -34,6 +35,7 @@
                         <td><span data-bind="text: maxElevation"></span>°</td>
                         <td data-bind="if: !isUpcomingPass"><span data-bind="text: gain"></span> dB</td>
                         <td data-bind="foreach: isUpcomingPass ? [] : enhancementTypes"><a data-bind="attr: {href: 'data/'+$parent. imageDir+'/'+$parent.fileKey+'-'+$data+'.png', title: $root.getEnhancementTypeTitle($data)}, text: $data"></a> </td>
+                        <td data-bind="if: projectionTypes != null && projectionTypes !== 0"><a data-bind="attr: {href: 'projection.html#'+fileKey}">Show</a></td>
                     </tr>
                 </tbody>
             </table>

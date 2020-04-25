@@ -15,6 +15,7 @@ namespace NoaaWeb.App.Models
         public int MaxElevation { get; set; }
         public double? Gain { get; set; }
         public EnhancementTypes? EnhancementTypes { get; set; }
+        public ProjectionTypes? ProjectionTypes { get; set; }
         public string ThumbnailUri { get; set; }
         public string ThumbnailEnhancementType { get; set; }
         public bool IsUpcomingPass { get; set; }

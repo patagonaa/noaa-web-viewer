@@ -48,6 +48,7 @@ namespace NoaaWeb.App.Controllers
                 MaxElevation = x.MaxElevation,
                 Gain = double.IsNaN(x.Gain) ? -1000 : x.Gain,
                 EnhancementTypes = x.EnhancementTypes,
+                ProjectionTypes = x.ProjectionTypes,
                 ThumbnailUri = x.ThumbnailUri,
                 ThumbnailEnhancementType = x.ThumbnailEnhancementType,
                 IsUpcomingPass = false

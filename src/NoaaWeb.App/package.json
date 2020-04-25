@@ -3,6 +3,7 @@
     "name": "asp.net",
     "private": true,
     "scripts": {
+        "watch:dev": "webpack --mode development --watch",
         "build:dev": "webpack --mode development",
         "build:prod": "webpack --mode production"
     },
@@ -22,6 +23,8 @@
     },
     "dependencies": {
         "bootstrap": "^4.4.1",
-        "knockout": "^3.5.1"
+        "jquery": "^3.5.0",
+        "knockout": "^3.5.1",
+        "popper.js": "^1.16.1"
     }
 }

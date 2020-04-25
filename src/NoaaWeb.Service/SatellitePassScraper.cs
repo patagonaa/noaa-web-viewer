@@ -42,6 +42,7 @@ namespace NoaaWeb.Service
                     foreach (var month in monthsDir.Where(x => x.IsDirectory).Select(x => x.Name).OrderBy(x => x))
                     {
                         var monthDir = _fileProvider.GetDirectoryContents($"/meta/{year}/{month}");
+                        var monthImagesDir = _fileProvider.GetDirectoryContents($"/images/{year}/{month}");
 
                         foreach (var metaFileInfo in monthDir.OrderBy(x => x.Name))
                         {
@@ -92,7 +93,7 @@ namespace NoaaWeb.Service
                             var gain = -double.Parse(Regex.Match(metaData, @"^GAIN=Gain: (.*)$", RegexOptions.Multiline).Groups[1].Value, CultureInfo.InvariantCulture);
                             var maxElev = int.Parse(Regex.Match(metaData, @"^MAXELEV=(.*)$", RegexOptions.Multiline).Groups[1].Value, CultureInfo.InvariantCulture);
 
-                            var enhancementTypes = (EnhancementTypes)0;
+                            var enhancementTypes = EnhancementTypes.None;
 
                             if (new[] { channelA, channelB }.Any(x => x == "4") && new[] { channelA, channelB }.Any(x => x == "1" || x == "2"))
                             {
@@ -107,6 +108,28 @@ namespace NoaaWeb.Service
                                 enhancementTypes |= EnhancementTypes.No;
                             }
 
+                            var projectionTypes = ProjectionTypes.None;
+
+                            if (enhancementTypes.HasFlag(EnhancementTypes.Msa) && monthImagesDir.Any(x => x.Name == $"{fileKey}-MSA-merc.png"))
+                            {
+                                projectionTypes |= ProjectionTypes.MsaMercator;
+                            }
+
+                            if (enhancementTypes.HasFlag(EnhancementTypes.Msa) && monthImagesDir.Any(x => x.Name == $"{fileKey}-MSA-stereo.png"))
+                            {
+                                projectionTypes |= ProjectionTypes.MsaStereographic;
+                            }
+
+                            if (enhancementTypes.HasFlag(EnhancementTypes.Therm) && monthImagesDir.Any(x => x.Name == $"{fileKey}-THERM-merc.png"))
+                            {
+                                projectionTypes |= ProjectionTypes.ThermMercator;
+                            }
+
+                            if (enhancementTypes.HasFlag(EnhancementTypes.Therm) && monthImagesDir.Any(x => x.Name == $"{fileKey}-THERM-stereo.png"))
+                            {
+                                projectionTypes |= ProjectionTypes.ThermStereographic;
+                            }
+
                             var toInsert = new SatellitePass
                             {
                                 ImageDir = imageDir,
@@ -118,7 +141,8 @@ namespace NoaaWeb.Service
                                 ChannelB = channelB,
                                 Gain = gain,
                                 MaxElevation = maxElev,
-                                EnhancementTypes = enhancementTypes
+                                EnhancementTypes = enhancementTypes,
+                                ProjectionTypes = projectionTypes
                             };
 
                             IFileInfo thumbnailSource = null;
