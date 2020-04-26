@@ -33,10 +33,14 @@
             width: auto;
             max-width: 100%;
         }
+
+        img.loading{
+            opacity: 0.5;
+        }
     </style>
 </head>
 <body>
-    <div id="main" data-bind="css: {'theme-dark': darkMode}">
+    <div id="main" data-bind="css: {'theme-dark': darkMode}, if: currentItem()">
         <nav class="navbar navbar-lg navbar-light bg-light">
             <div class="my-2 my-lg-0">
                 <button class="btn btn-primary my-2 my-sm-0" data-bind="click: last, enable: pastItems().length > 0, text: pastItems().length > 0 ? new Date(pastItems()[0].startTime).toLocaleString() : 'Last'">Last</button>
@@ -53,7 +57,7 @@
         </nav>
 
         <div class="projection">
-            <img class="projection" id="projection-image"/>
+            <img class="projection" id="projection-image" data-bind="css: {'loading': imageLoading}"/>
         </div>
     </div>
 </body>

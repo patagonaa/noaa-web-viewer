@@ -2,14 +2,11 @@
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './style.css';
 
-
-
-
 class ProjectionViewModel {
     public darkMode: boolean = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
 
-    public loading = ko.observable(true);
-    public imageLoading = ko.observable(true);
+    public loading = ko.observable(false);
+    public imageLoading = ko.observable(false);
 
     public currentItem = ko.observable<ProjectionItemViewModel>();
     public pastItems = ko.observableArray<ProjectionItemViewModel>([]);
@@ -19,32 +16,59 @@ class ProjectionViewModel {
 
     public imgElement = <HTMLImageElement>document.getElementById('projection-image');
 
+    public ignoreHashUpdate = false;
+
     constructor() {
-        this.currentItem.subscribe(x => window.location.hash = x.fileKey);
-        this.projectionType.subscribe(() => this.refresh());
-        window.addEventListener('hashchange', () => this.refresh());
+        this.currentItem.subscribe(x => {
+            this.ignoreHashUpdate = true;
+            window.location.hash = x.fileKey;
+            setTimeout(() => this.ignoreHashUpdate = false, 0); // setTimeout here, because the change handler runs _after_, not _during_ this function.
+        });
+        this.currentItem.subscribe(async () => await this.updateImage());
+        this.projectionType.subscribe(() => {
+            this.updateImage();
+            this.refresh(false);
+        });
+        window.addEventListener('hashchange', () => {
+            if (!this.ignoreHashUpdate)
+                this.refresh(true);
+        });
     }
 
     async init() {
-        await this.refresh();
+        await this.refresh(true);
     }
 
-    async refresh() {
-        await this.fetchData(window.location.hash.substring(1));
+    async refresh(updateCurrentItem: boolean) {
+        await this.fetchData(window.location.hash.substring(1), updateCurrentItem);
     }
 
-    async fetchData(key: string) {
+    private loadingAbortController = new AbortController();
+
+    async fetchData(key: string, updateCurrentItem: boolean) {
+        if (this.loading()) {
+            this.loadingAbortController.abort();
+            this.loadingAbortController = new AbortController();
+        }
         this.loading(true);
-        let data = await fetch('api/ProjectionView?fileKey=' + key + '&projectionType=' + this.projectionType());
-        let result = <ProjectionViewResult>await data.json();
-        this.pastItems(result.past);
-        this.futureItems(result.future);
-        this.currentItem(result.current);
-        this.loading(false);
+        try {
+            let data = await fetch(`api/ProjectionView?fileKey=${key}&projectionType=${this.projectionType()}`, { signal: this.loadingAbortController.signal });
+            let result = <ProjectionViewResult>await data.json();
+            this.pastItems(result.past);
+            this.futureItems(result.future);
+            if (updateCurrentItem) {
+                this.currentItem(result.current);
+            }
+            this.loading(false);
+        } catch (error) {
+            if (error.name !== 'AbortError')
+                throw error;
+        }
+    }
 
+    async updateImage() {
         await this.replaceImage(this.getFilePath(this.currentItem(), this.projectionType()));
-
-        this.preload(result.future[0]).then(() => this.preload(result.future[1])).then(() => this.preload(result.past[0]));
+        this.preload(this.futureItems()[0]).then(() => this.preload(this.futureItems()[1])).then(() => this.preload(this.pastItems()[0]));
     }
 
     async replaceImage(src: string) {
@@ -91,7 +115,7 @@ class ProjectionViewModel {
                 break;
         }
 
-        return 'data/' + item.imageDir + '/' + item.fileKey + '-' + enhancementTypeString + '-' + projectionTypeString + '.png';
+        return `data/${item.imageDir}/${item.fileKey}-${enhancementTypeString}-${projectionTypeString}.png`;
     }
 
     getProjectionTypes(projectionTypes: ProjectionTypes) {
@@ -117,7 +141,7 @@ class ProjectionViewModel {
         this.currentItem(nextItem);
         this.pastItems.unshift(currentItem);
 
-        this.refresh();
+        this.refresh(false);
     }
 
     last() {
@@ -126,7 +150,7 @@ class ProjectionViewModel {
         this.currentItem(lastItem);
         this.futureItems.unshift(currentItem);
 
-        this.refresh();
+        this.refresh(false);
     }
 }
 
