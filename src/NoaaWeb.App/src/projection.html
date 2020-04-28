@@ -40,13 +40,11 @@
     </style>
 </head>
 <body>
-    <div id="main" data-bind="css: {'theme-dark': darkMode}, if: currentItem()">
-        <nav class="navbar navbar-lg navbar-light bg-light">
+    <div id="main" data-bind="css: {'theme-dark': darkMode}">
+        <nav class="navbar navbar-lg" data-bind="css: {'bg-light': !darkMode, 'bg-dark': darkMode}">
             <div class="my-2 my-lg-0">
                 <button class="btn btn-primary my-2 my-sm-0" data-bind="click: last, enable: pastItems().length > 0, text: pastItems().length > 0 ? new Date(pastItems()[0].startTime).toLocaleString() : 'Last'">Last</button>
                 <select data-bind="options: getProjectionTypes(currentItem().projectionTypes), optionsText: 'key', optionsValue: 'value', value: projectionType"></select>
-                <span data-bind="visible: loading">Loading...</span>
-                <span data-bind="visible: imageLoading">Loading Image...</span>
             </div>
             <div class="justify-content-md-center">
                 <a class="btn btn-secondary my-2 my-sm-0" href="index.html">Back</a>
@@ -57,7 +55,7 @@
         </nav>
 
         <div class="projection">
-            <img class="projection" id="projection-image" data-bind="css: {'loading': imageLoading}"/>
+            <img class="projection" id="projection-image" data-bind="css: {'loading': imageLoading}" />
         </div>
     </div>
 </body>

@@ -19,7 +19,7 @@ namespace NoaaWeb.App.Controllers
             _passRepository = passRepository;
         }
 
-        public ActionResult<ProjectionViewResult> Get(string fileKey, ProjectionTypes projectionType)
+        public ActionResult<ProjectionViewResult> Get(string fileKey, ProjectionTypes? projectionType)
         {
             var passes = _passRepository.Get();
 
@@ -28,6 +28,15 @@ namespace NoaaWeb.App.Controllers
             if(currentPass == null)
             {
                 return NotFound();
+            }
+
+            if(projectionType == null)
+            {
+                // this is the same fallback logic as in projection.ts init() so we don't have to make a second request
+                // to get the past/future passes with the currently selected projection
+                projectionType = currentPass.ProjectionTypes.HasFlag(ProjectionTypes.MsaStereographic) ?
+                    ProjectionTypes.MsaStereographic :
+                    ProjectionTypes.ThermStereographic;
             }
 
             var pastPasses = passes.OrderByDescending(x => x.StartTime).Where(x => x.StartTime < currentPass.StartTime && x.ProjectionTypes.HasFlag(projectionType)).Take(5).ToList();

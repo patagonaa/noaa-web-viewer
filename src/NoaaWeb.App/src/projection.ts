@@ -12,13 +12,21 @@ class ProjectionViewModel {
     public pastItems = ko.observableArray<ProjectionItemViewModel>([]);
     public futureItems = ko.observableArray<ProjectionItemViewModel>([]);
 
-    public projectionType = ko.observable<ProjectionTypes>(ProjectionTypes.MsaStereographic);
+    public projectionType = ko.observable<ProjectionTypes>();
 
     public imgElement = <HTMLImageElement>document.getElementById('projection-image');
 
     public ignoreHashUpdate = false;
 
     constructor() {
+    }
+
+    async init() {
+        await this.refresh(true);
+        this.projectionType(this.getProjectionTypes(this.currentItem().projectionTypes)[0].value);
+
+        this.updateImage(); // fire and forget so we can apply bindings while image is still loading
+
         this.currentItem.subscribe(x => {
             this.ignoreHashUpdate = true;
             window.location.hash = x.fileKey;
@@ -35,10 +43,6 @@ class ProjectionViewModel {
         });
     }
 
-    async init() {
-        await this.refresh(true);
-    }
-
     async refresh(updateCurrentItem: boolean) {
         await this.fetchData(window.location.hash.substring(1), updateCurrentItem);
     }
@@ -52,7 +56,7 @@ class ProjectionViewModel {
         }
         this.loading(true);
         try {
-            let data = await fetch(`api/ProjectionView?fileKey=${key}&projectionType=${this.projectionType()}`, { signal: this.loadingAbortController.signal });
+            let data = await fetch(`api/ProjectionView?fileKey=${key}&projectionType=${this.projectionType() || ''}`, { signal: this.loadingAbortController.signal });
             let result = <ProjectionViewResult>await data.json();
             this.pastItems(result.past);
             this.futureItems(result.future);
@@ -120,17 +124,17 @@ class ProjectionViewModel {
 
     getProjectionTypes(projectionTypes: ProjectionTypes) {
         let toReturn: { key: string, value: ProjectionTypes }[] = [];
-        if (projectionTypes & ProjectionTypes.MsaMercator) {
-            toReturn.push({ key: 'MSA Mercator', value: ProjectionTypes.MsaMercator });
-        }
         if (projectionTypes & ProjectionTypes.MsaStereographic) {
             toReturn.push({ key: 'MSA Stereographic', value: ProjectionTypes.MsaStereographic });
         }
-        if (projectionTypes & ProjectionTypes.ThermMercator) {
-            toReturn.push({ key: 'THERM Mercator', value: ProjectionTypes.ThermMercator });
+        if (projectionTypes & ProjectionTypes.MsaMercator) {
+            toReturn.push({ key: 'MSA Mercator', value: ProjectionTypes.MsaMercator });
         }
         if (projectionTypes & ProjectionTypes.ThermStereographic) {
             toReturn.push({ key: 'THERM Stereographic', value: ProjectionTypes.ThermStereographic });
+        }
+        if (projectionTypes & ProjectionTypes.ThermMercator) {
+            toReturn.push({ key: 'THERM Mercator', value: ProjectionTypes.ThermMercator });
         }
         return toReturn;
     }
