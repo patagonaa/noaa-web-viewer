@@ -2,6 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8" />
+    <meta name="viewport" content="width=1000">
     <title>NOAA-Web-Viewer</title>
     <link rel="shortcut icon" type="image/x-icon" href="icon.png">
     <style>
@@ -39,15 +40,14 @@
             justify-content: center;
         }
 
-        img.projection.fit {
+        img.projection {
             position: absolute;
+        }
+
+        img.projection.fit {
             max-height: 100%;
             width: auto;
             max-width: 100%;
-        }
-
-        img.projection.original {
-            position: absolute;
         }
 
         img.loading {
@@ -84,6 +84,7 @@
                         <select class="form-control" data-bind="value: zoomType">
                             <option value="fit">Fit to Viewport</option>
                             <option value="original">100%</option>
+                            <option value="double">200%</option>
                         </select>
                     </div>
                 </div>
@@ -98,7 +99,7 @@
         </nav>
 
         <div class="projection">
-            <img class="projection" id="projection-image" data-bind="css: {'loading': imageLoading, 'fit': zoomType() == 'fit', 'original': zoomType() == 'original'}" />
+            <img class="projection" id="projection-image" data-bind="css: {'loading': imageLoading, 'fit': zoomType() == 'fit'}, attr: {style: getSizingStyles(zoomType())}" />
         </div>
     </div>
 </body>

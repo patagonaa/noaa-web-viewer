@@ -13,7 +13,10 @@ class ProjectionViewModel {
     public futureItems = ko.observableArray<ProjectionItemViewModel>([]);
 
     public projectionType = ko.observable<ProjectionTypes>();
-    public zoomType = ko.observable<'fit'|'original'>();
+    public zoomType = ko.observable<'fit' | 'original' | 'double'>();
+
+    public nativeImageWidth = 1878;
+    public nativeImageHeight = 1371;
 
     public imgElement = <HTMLImageElement>document.getElementById('projection-image');
 
@@ -42,6 +45,27 @@ class ProjectionViewModel {
             if (!this.ignoreHashUpdate)
                 this.refresh(true);
         });
+    }
+
+    //we use attr binding instead of style binding because style binding doesn't reset styles when setting to an empty object
+    public getSizingStyles(zoomType: 'fit' | 'original' | 'double'): string {
+        if (zoomType == 'fit')
+            return '';
+
+        if (zoomType == 'original' && (window.devicePixelRatio == null || window.devicePixelRatio === 1))
+            return '';
+
+        let zoom = zoomType == 'double' ? 2 : 1;
+        let width = this.nativeImageWidth * zoom / window.devicePixelRatio;
+        let height = this.nativeImageHeight * zoom / window.devicePixelRatio;
+
+        let toReturn = `width: ${width}px; height: ${height}px;`;
+
+        if (zoomType == 'double') {
+            toReturn += ' image-rendering: pixelated;';
+        }
+
+        return toReturn;
     }
 
     async refresh(updateCurrentItem: boolean) {
