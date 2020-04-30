@@ -1,5 +1,8 @@
 # noaa-web-viewer
 
+![screenshot](./doc/screenshot_table.png)
+![example image](./doc/example_image.png)
+
 ## Installation
 easiest installation is probably through docker-compose. There is an example `docker-compose.yml` in the root of this repository.
 
