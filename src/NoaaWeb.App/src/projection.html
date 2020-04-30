@@ -15,47 +15,90 @@
         #main {
             flex: 1;
             display: flex;
-            flex-direction: column;
+            flex-direction: row;
+        }
+
+        .card.sidebar {
+            flex-basis: 300px;
+            overflow: auto;
+            border-radius: 0;
+        }
+
+        .card-navigation a, .card-navigation button {
+            display: block;
+            width: 100%;
+            margin-bottom: .5rem;
         }
 
         div.projection {
             position: relative;
             flex-basis: 0%;
             flex: 1;
-            overflow: hidden;
+            overflow: auto;
             display: flex;
             justify-content: center;
         }
 
-        img.projection {
+        img.projection.fit {
             position: absolute;
             max-height: 100%;
             width: auto;
             max-width: 100%;
         }
 
-        img.loading{
+        img.projection.original {
+            position: absolute;
+        }
+
+        img.loading {
             opacity: 0.5;
         }
     </style>
 </head>
 <body>
     <div id="main" data-bind="css: {'theme-dark': darkMode}">
-        <nav class="navbar navbar-lg" data-bind="css: {'bg-light': !darkMode, 'bg-dark': darkMode}">
-            <div class="my-2 my-lg-0">
-                <button class="btn btn-primary my-2 my-sm-0" data-bind="click: last, enable: pastItems().length > 0, text: pastItems().length > 0 ? new Date(pastItems()[0].startTime).toLocaleString() : 'Last'">Last</button>
-                <select data-bind="options: getProjectionTypes(currentItem().projectionTypes), optionsText: 'key', optionsValue: 'value', value: projectionType"></select>
+        <nav class="sidebar card" data-bind="css: {'bg-light': !darkMode, 'bg-dark': darkMode, 'text-white': darkMode}">
+            <div class="card-group-item card-navigation">
+                <div class="card-body">
+                    <a class="btn btn-secondary" href="index.html">Back to Overview</a>
+                </div>
             </div>
-            <div class="justify-content-md-center">
-                <a class="btn btn-secondary my-2 my-sm-0" href="index.html">Back</a>
+            <div class="card-group-item card-navigation">
+                <header class="card-header">Navigation</header>
+                <div class="card-body">
+                    <button class="btn btn-primary" data-bind="click: last, enable: pastItems().length > 0, text: '🡸 ' + (pastItems().length > 0 ? new Date(pastItems()[0].startTime).toLocaleString() : 'Last')">Last</button>
+                    <button class="btn btn-primary" disabled data-bind="text: new Date(currentItem().startTime).toLocaleString()">Current</button>
+                    <button class="btn btn-primary" data-bind="click: next, enable: futureItems().length > 0, text: (futureItems().length > 0 ? new Date(futureItems()[0].startTime).toLocaleString() : 'Next') + ' 🡺'">Next</button>
+                </div>
             </div>
-            <div class="form-inline my-2 my-lg-0">
-                <button class="btn btn-primary my-2 my-sm-0" data-bind="click: next, enable: futureItems().length > 0, text: futureItems().length > 0 ? new Date(futureItems()[0].startTime).toLocaleString() : 'Next'">Next</button>
+
+            <div class="card-group-item">
+                <header class="card-header">View</header>
+                <div class="card-body">
+                    <div class="form-group">
+                        <label>Projection Type</label>
+                        <select class="form-control" data-bind="options: getProjectionTypes(currentItem().projectionTypes), optionsText: 'key', optionsValue: 'value', value: projectionType"></select>
+                    </div>
+                    <div class="form-group">
+                        <label>Zoom Type</label>
+                        <select class="form-control" data-bind="value: zoomType">
+                            <option value="fit">Fit to Viewport</option>
+                            <option value="original">100%</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="card-group-item">
+                <header class="card-header">Info</header>
+                <div class="list-group list-group-flush">
+                    <span class="list-group-item" data-bind="css: {'list-group-item-dark': darkMode}, visible: loading">Loading Info... <span class="spinner-border spinner-border-sm"></span></span>
+                    <span class="list-group-item" data-bind="css: {'list-group-item-dark': darkMode}, visible: imageLoading">Loading Image... <span class="spinner-border spinner-border-sm"></span></span>
+                </div>
             </div>
         </nav>
 
         <div class="projection">
-            <img class="projection" id="projection-image" data-bind="css: {'loading': imageLoading}" />
+            <img class="projection" id="projection-image" data-bind="css: {'loading': imageLoading, 'fit': zoomType() == 'fit', 'original': zoomType() == 'original'}" />
         </div>
     </div>
 </body>

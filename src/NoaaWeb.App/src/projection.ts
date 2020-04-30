@@ -13,6 +13,7 @@ class ProjectionViewModel {
     public futureItems = ko.observableArray<ProjectionItemViewModel>([]);
 
     public projectionType = ko.observable<ProjectionTypes>();
+    public zoomType = ko.observable<'fit'|'original'>();
 
     public imgElement = <HTMLImageElement>document.getElementById('projection-image');
 
