@@ -30,11 +30,16 @@ namespace NoaaWeb.App
             services.AddSingleton<IUpcomingPassRepository, UpcomingPassFileRepository>();
             services.Configure<WebDavConfiguration>(Configuration.GetSection("WebDav"));
             services.Configure<FileDbConfiguration>(Configuration);
+
+            services.AddSingleton<MetricsMiddleware>();
+            services.AddHostedService<MetricsServer>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env, IOptions<WebDavConfiguration> webDavConfig)
         {
+            app.UseMiddleware<MetricsMiddleware>();
+
             app.UseResponseCompression();
 
             if (env.IsDevelopment())
