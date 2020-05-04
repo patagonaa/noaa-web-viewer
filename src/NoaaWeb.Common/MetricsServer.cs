@@ -5,9 +5,9 @@ using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace NoaaWeb.App
+namespace NoaaWeb.Common
 {
-    class MetricsServer : IHostedService
+    public class MetricsServer : IHostedService
     {
         private readonly MetricServer _server;
         private readonly ILogger _logger;

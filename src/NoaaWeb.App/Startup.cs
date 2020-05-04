@@ -5,6 +5,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
+using NoaaWeb.Common;
 using NoaaWeb.Data;
 using NoaaWeb.Data.SatellitePass;
 using NoaaWeb.Data.UpcomingPass;

@@ -3,6 +3,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using NoaaWeb.Common;
 using NoaaWeb.Data;
 using NoaaWeb.Data.SatellitePass;
 using NoaaWeb.Data.UpcomingPass;
@@ -47,6 +48,8 @@ namespace NoaaWeb.Service
             services.Configure<WebDavConfiguration>(ctx.Configuration.GetSection("WebDav"));
 
             services.AddTransient<WebDavFileProvider>();
+
+            services.AddHostedService<MetricsServer>();
 
             services.AddTransient<ISatellitePassRepository, SatellitePassFileRepository>();
             services.AddSingleton<SatellitePassScraper>();

@@ -30,6 +30,7 @@
 
     <ItemGroup>
         <ProjectReference Include="..\FileProviders.WebDav\FileProviders.WebDav.csproj" />
+        <ProjectReference Include="..\NoaaWeb.Common\NoaaWeb.Common.csproj" />
         <ProjectReference Include="..\NoaaWeb.Data\NoaaWeb.Data.csproj" />
     </ItemGroup>
 
