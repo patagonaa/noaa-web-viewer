@@ -24,8 +24,14 @@ namespace NoaaWeb.Service
             _passRepository = passRepository;
             var config = options.Value;
 
-            if (!string.IsNullOrEmpty(config.Url))
+            if (string.IsNullOrEmpty(config.Url))
+            {
+                _logger.LogInformation("InfluxDB Url not set, skipping pass metrics");
+            }
+            else
+            {
                 _client = new LineProtocolClient(new Uri(config.Url), config.Database, config.Username, config.Password);
+            }
         }
 
         public void Send(CancellationToken cancellationToken)
@@ -35,6 +41,8 @@ namespace NoaaWeb.Service
 
             lock (_sendLock)
             {
+                _logger.LogInformation("Starting InfluxDB metrics send.");
+
                 try
                 {
                     var passes = _passRepository.Get()
