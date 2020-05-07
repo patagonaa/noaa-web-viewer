@@ -48,7 +48,7 @@ namespace NoaaWeb.Service
                     var passes = _passRepository.Get()
                         .Where(x => x.StartTime > _lastPass)
                         .OrderBy(x => x.StartTime)
-                        .Take(50)
+                        .Take(500)
                         .ToList();
 
                     var points = new LineProtocolPayload();
