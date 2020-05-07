@@ -65,7 +65,7 @@ namespace NoaaWeb.Data.SatellitePass
                 {
                     if (ioex.HResult != 32 && ioex.HResult != 33)
                     {
-                        _logger.LogWarning(ioex, "Unhandled IOException. Retrying.");
+                        _logger.LogWarning(ioex, "Unhandled IOException with HResult {HResult}. Retrying.", ioex.HResult);
                     }
                     Thread.Sleep(100);
                 }

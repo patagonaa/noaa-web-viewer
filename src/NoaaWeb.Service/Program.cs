@@ -46,6 +46,7 @@ namespace NoaaWeb.Service
         {
             services.Configure<FileDbConfiguration>(ctx.Configuration);
             services.Configure<WebDavConfiguration>(ctx.Configuration.GetSection("WebDav"));
+            services.Configure<InfluxMetricsConfiguration>(ctx.Configuration.GetSection("InfluxDB"));
 
             services.AddTransient<WebDavFileProvider>();
 
@@ -58,6 +59,9 @@ namespace NoaaWeb.Service
             services.AddTransient<IUpcomingPassRepository, UpcomingPassFileRepository>();
             services.AddSingleton<UpcomingPassScraper>();
             services.AddHostedService<UpcomingPassIndexHost>();
+
+            services.AddSingleton<InfluxMetricsSender>();
+            services.AddHostedService<InfluxMetricsHost>();
         }
     }
 }
