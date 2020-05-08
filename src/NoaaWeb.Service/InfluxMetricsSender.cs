@@ -51,38 +51,41 @@ namespace NoaaWeb.Service
                         .Take(500)
                         .ToList();
 
-                    var points = new LineProtocolPayload();
-
-                    foreach (var pass in passes)
+                    if (passes.Count > 0)
                     {
-                        var fields = new Dictionary<string, object>
+                        var points = new LineProtocolPayload();
+
+                        foreach (var pass in passes)
                         {
-                            {"enhancementTypes", (int)pass.EnhancementTypes},
-                            {"projectionTypes", (int)pass.ProjectionTypes},
-                            {"gain", pass.Gain },
-                            {"maxElevation", pass.MaxElevation }
-                        };
-                        if (pass.EndTime.HasValue)
-                        {
-                            fields.Add("durationSeconds", (pass.EndTime.Value - pass.StartTime).TotalSeconds);
+                            var fields = new Dictionary<string, object>
+                            {
+                                {"enhancementTypes", (int)pass.EnhancementTypes},
+                                {"projectionTypes", (int)pass.ProjectionTypes},
+                                {"gain", pass.Gain },
+                                {"maxElevation", pass.MaxElevation }
+                            };
+                            if (pass.EndTime.HasValue)
+                            {
+                                fields.Add("durationSeconds", (pass.EndTime.Value - pass.StartTime).TotalSeconds);
+                            }
+
+                            var tags = new Dictionary<string, string>
+                            {
+                                {"sat", pass.SatelliteName },
+                                {"channelA", pass.ChannelA },
+                                {"channelB", pass.ChannelB },
+                            };
+
+                            var passPoint = new LineProtocolPoint("pass", fields, tags, pass.StartTime);
+                            points.Add(passPoint);
                         }
+                        _logger.LogInformation("Adding {PassCount} new passes to InfluxDB", passes.Count);
 
-                        var tags = new Dictionary<string, string>
-                        {
-                            {"sat", pass.SatelliteName },
-                            {"channelA", pass.ChannelA },
-                            {"channelB", pass.ChannelB },
-                        };
+                        var writeResult = _client.WriteAsync(points, cancellationToken).Result;
 
-                        var passPoint = new LineProtocolPoint("pass", fields, tags, pass.StartTime);
-                        points.Add(passPoint);
+                        if (!writeResult.Success)
+                            throw new Exception(writeResult.ErrorMessage);
                     }
-                    _logger.LogInformation("Adding {PassCount} new passes to InfluxDB", passes.Count);
-
-                    var writeResult = _client.WriteAsync(points, cancellationToken).Result;
-
-                    if (!writeResult.Success)
-                        throw new Exception(writeResult.ErrorMessage);
 
                     _lastPass = passes.Max(x => x.StartTime);
 
