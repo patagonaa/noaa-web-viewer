@@ -85,9 +85,9 @@ namespace NoaaWeb.Service
 
                         if (!writeResult.Success)
                             throw new Exception(writeResult.ErrorMessage);
-                    }
 
-                    _lastPass = passes.Max(x => x.StartTime);
+                        _lastPass = passes.Max(x => x.StartTime);
+                    }
 
                     _logger.LogInformation("InfluxDB write success!");
                 }
