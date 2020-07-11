@@ -46,7 +46,7 @@ namespace NoaaWeb.Data.SatellitePass
                 dbfile.Position = 0;
                 dbfile.SetLength(0);
 
-                using (var sbsw = new StreamWriter(dbfile, Encoding.UTF8))
+                using (var sbsw = new StreamWriter(dbfile, Encoding.UTF8, 1024, true))
                 {
                     sbsw.Write(JsonConvert.SerializeObject(db, Formatting.Indented));
                 }
