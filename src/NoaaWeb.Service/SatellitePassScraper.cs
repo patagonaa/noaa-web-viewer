@@ -44,7 +44,7 @@ namespace NoaaWeb.Service
                 "total time satellite passes were scraped",
                 new CounterConfiguration
                 {
-                    LabelNames = new string[] {}
+                    LabelNames = new string[] { }
                 });
             _passCounter = Metrics.CreateCounter(
                 "noaa_pass_scrape_passes_total",
@@ -138,6 +138,15 @@ namespace NoaaWeb.Service
                                 {
                                     enhancementTypes |= EnhancementTypes.Msa;
                                 }
+                                else
+                                {
+                                    if (monthImagesDir.Any(x => x.Name == $"{fileKey}-MSA.png"))
+                                        _fileProvider.DeleteFile($"{imageDir}/{fileKey}-MSA.png");
+                                    if (monthImagesDir.Any(x => x.Name == $"{fileKey}-MSA-merc.png"))
+                                        _fileProvider.DeleteFile($"{imageDir}/{fileKey}-MSA-merc.png");
+                                    if (monthImagesDir.Any(x => x.Name == $"{fileKey}-MSA-stereo.png"))
+                                        _fileProvider.DeleteFile($"{imageDir}/{fileKey}-MSA-stereo.png");
+                                }
 
                                 if (new[] { channelA, channelB }.Any(x => x == "4"))
                                 {
@@ -145,6 +154,21 @@ namespace NoaaWeb.Service
                                     enhancementTypes |= EnhancementTypes.Therm;
                                     enhancementTypes |= EnhancementTypes.Za;
                                     enhancementTypes |= EnhancementTypes.No;
+                                }
+                                else
+                                {
+                                    if (monthImagesDir.Any(x => x.Name == $"{fileKey}-MCIR.png"))
+                                        _fileProvider.DeleteFile($"{imageDir}/{fileKey}-MCIR.png");
+                                    if (monthImagesDir.Any(x => x.Name == $"{fileKey}-THERM.png"))
+                                        _fileProvider.DeleteFile($"{imageDir}/{fileKey}-THERM.png");
+                                    if (monthImagesDir.Any(x => x.Name == $"{fileKey}-ZA.png"))
+                                        _fileProvider.DeleteFile($"{imageDir}/{fileKey}-ZA.png");
+                                    if (monthImagesDir.Any(x => x.Name == $"{fileKey}-NO.png"))
+                                        _fileProvider.DeleteFile($"{imageDir}/{fileKey}-NO.png");
+                                    if (monthImagesDir.Any(x => x.Name == $"{fileKey}-THERM-merc.png"))
+                                        _fileProvider.DeleteFile($"{imageDir}/{fileKey}-THERM-merc.png");
+                                    if (monthImagesDir.Any(x => x.Name == $"{fileKey}-THERM-stereo.png"))
+                                        _fileProvider.DeleteFile($"{imageDir}/{fileKey}-THERM-stereo.png");
                                 }
 
                                 var projectionTypes = ProjectionTypes.None;

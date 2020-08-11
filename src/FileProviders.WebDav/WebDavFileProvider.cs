@@ -81,6 +81,27 @@ namespace FileProviders.WebDav
             return new WebDavFileInfo(_client, result.Resources.Single());
         }
 
+        public bool DeleteFile(string subpath)
+        {
+            if (subpath.StartsWith("/"))
+            {
+                subpath = subpath.Substring(1);
+            }
+
+            var result = _client.Delete(subpath).Result;
+            if (result.StatusCode == 404)
+            {
+                return false;
+            }
+
+            if (!result.IsSuccessful)
+            {
+                throw new WebException("WebDav error " + result.StatusCode + " while deleting file");
+            }
+
+            return true;
+        }
+
         public IChangeToken Watch(string filter)
         {
             throw new NotImplementedException();
