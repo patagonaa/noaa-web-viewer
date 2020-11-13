@@ -30,18 +30,18 @@ namespace NoaaWeb.Data.UpcomingPass
             }
         }
 
-        public void Insert(UpcomingSatellitePass pass)
+        public void Insert(IList<UpcomingSatellitePass> passes)
         {
             using (var dbfile = OpenDb(FileAccess.ReadWrite, FileShare.None))
             {
-                IList<UpcomingSatellitePass> db;
+                List<UpcomingSatellitePass> db;
                 using (var dbsr = new StreamReader(dbfile, Encoding.UTF8, false, 1024, true))
                 {
                     var dbStr = dbsr.ReadToEnd();
-                    db = dbStr.Length == 0 ? new List<UpcomingSatellitePass>() : JsonConvert.DeserializeObject<IList<UpcomingSatellitePass>>(dbStr);
+                    db = dbStr.Length == 0 ? new List<UpcomingSatellitePass>() : JsonConvert.DeserializeObject<List<UpcomingSatellitePass>>(dbStr);
                 }
 
-                db.Add(pass);
+                db.AddRange(passes);
 
                 dbfile.Position = 0;
                 dbfile.SetLength(0);

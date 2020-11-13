@@ -4,6 +4,7 @@ namespace NoaaWeb.Data.SatellitePass
 {
     public class SatellitePass
     {
+        public string Site { get; set; }
         public string FileKey { get; set; }
         public DateTime StartTime { get; set; }
         public DateTime? EndTime { get; set; }

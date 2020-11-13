@@ -144,7 +144,7 @@ class ProjectionViewModel {
                 break;
         }
 
-        return `data/${item.imageDir}/${item.fileKey}-${enhancementTypeString}-${projectionTypeString}.png`;
+        return `data${item.imageDir}/${item.fileKey}-${enhancementTypeString}-${projectionTypeString}.png`;
     }
 
     getProjectionTypes(projectionTypes: ProjectionTypes) {

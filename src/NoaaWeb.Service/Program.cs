@@ -44,6 +44,7 @@ namespace NoaaWeb.Service
 
         private static void ConfigureServices(HostBuilderContext ctx, IServiceCollection services)
         {
+            services.Configure<SiteConfiguration>(ctx.Configuration);
             services.Configure<FileDbConfiguration>(ctx.Configuration);
             services.Configure<WebDavConfiguration>(ctx.Configuration.GetSection("WebDav"));
             services.Configure<InfluxMetricsConfiguration>(ctx.Configuration.GetSection("InfluxDB"));
@@ -52,13 +53,13 @@ namespace NoaaWeb.Service
 
             services.AddHostedService<MetricsServer>();
 
-            services.AddTransient<ISatellitePassRepository, SatellitePassFileRepository>();
-            services.AddSingleton<SatellitePassScraper>();
-            services.AddHostedService<SatellitePassIndexHost>();
-
             services.AddTransient<IUpcomingPassRepository, UpcomingPassFileRepository>();
             services.AddSingleton<UpcomingPassScraper>();
             services.AddHostedService<UpcomingPassIndexHost>();
+
+            services.AddTransient<ISatellitePassRepository, SatellitePassFileRepository>();
+            services.AddSingleton<SatellitePassScraper>();
+            services.AddHostedService<SatellitePassIndexHost>();
 
             services.AddSingleton<InfluxMetricsSender>();
             services.AddHostedService<InfluxMetricsHost>();

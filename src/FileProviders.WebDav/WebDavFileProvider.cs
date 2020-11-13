@@ -26,10 +26,7 @@ namespace FileProviders.WebDav
 
         public IDirectoryContents GetDirectoryContents(string subpath)
         {
-            if (subpath.StartsWith("/"))
-            {
-                subpath = subpath.Substring(1);
-            }
+            subpath = subpath.TrimStart('/');
 
             var parameters = new PropfindParameters
             {
@@ -39,7 +36,7 @@ namespace FileProviders.WebDav
                 }
             };
             var result = _client.Propfind(subpath, parameters).Result;
-            if(result.StatusCode == 404)
+            if (result.StatusCode == 404)
             {
                 return NotFoundDirectoryContents.Singleton;
             }
@@ -54,10 +51,7 @@ namespace FileProviders.WebDav
 
         public IFileInfo GetFileInfo(string subpath)
         {
-            if (subpath.StartsWith("/"))
-            {
-                subpath = subpath.Substring(1);
-            }
+            subpath = subpath.TrimStart('/');
 
             var parameters = new PropfindParameters
             {
@@ -83,10 +77,7 @@ namespace FileProviders.WebDav
 
         public bool DeleteFile(string subpath)
         {
-            if (subpath.StartsWith("/"))
-            {
-                subpath = subpath.Substring(1);
-            }
+            subpath = subpath.TrimStart('/');
 
             var result = _client.Delete(subpath).Result;
             if (result.StatusCode == 404)
