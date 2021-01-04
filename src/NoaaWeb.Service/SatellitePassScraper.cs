@@ -82,7 +82,7 @@ namespace NoaaWeb.Service
         {
             try
             {
-                _logger.LogInformation("starting pass scrape");
+                _logger.LogInformation("starting pass scrape for site {Site}", site);
                 var sw = Stopwatch.StartNew();
 
                 var existingPasses = _satellitePassRepository.Get().Select(x => x.FileKey).ToHashSet();
