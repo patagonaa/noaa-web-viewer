@@ -93,11 +93,19 @@ namespace NoaaWeb.Service
 
                 foreach (var year in yearsDir.Where(x => x.IsDirectory).Select(x => x.Name).OrderBy(x => x))
                 {
+                    if (cancellationToken.IsCancellationRequested)
+                        break;
+
                     var monthsDir = _fileProvider.GetDirectoryContents($"{baseUrl}/meta/{year}");
                     foreach (var month in monthsDir.Where(x => x.IsDirectory).Select(x => x.Name).OrderBy(x => x))
                     {
+                        if (cancellationToken.IsCancellationRequested)
+                            break;
+
                         var monthDir = _fileProvider.GetDirectoryContents($"{baseUrl}/meta/{year}/{month}");
                         var monthImagesDir = _fileProvider.GetDirectoryContents($"{baseUrl}/images/{year}/{month}");
+
+                        _logger.LogInformation("scraping {ScrapeMonth}", $"{year}-{month}");
 
                         foreach (var metaFileInfo in monthDir.OrderBy(x => x.Name))
                         {
@@ -106,13 +114,12 @@ namespace NoaaWeb.Service
 
                             var fileKey = Path.GetFileNameWithoutExtension(metaFileInfo.Name);
 
-                            _logger.LogInformation("scraping {FileKey}", fileKey);
-
                             if (existingPasses.Contains(fileKey))
                             {
-                                _logger.LogInformation("{FileKey} already in database", fileKey);
                                 continue;
                             }
+
+                            _logger.LogInformation("scraping {FileKey}", fileKey);
 
                             var startTimeStr = fileKey.Substring(0, 15);
                             var startTime = DateTime.ParseExact(startTimeStr, "yyyyMMdd-HHmmss", CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal);

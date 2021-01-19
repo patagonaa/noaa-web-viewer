@@ -16,7 +16,7 @@ namespace NoaaWeb.Service
         {
             _timer = new Timer
             {
-                Interval = 60 * 1000,
+                Interval = 1000 * 60 * 15, // 15 minutes
                 AutoReset = true
             };
             _timer.Elapsed += (sender, e) => _scraper.Scrape(_cts.Token);
