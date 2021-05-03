@@ -42,8 +42,10 @@ module.exports = {
             filename: "projection.html",
             chunks: ['vendor', 'projection']
         }),
-        new CopyWebpackPlugin([
-            { from: './src/icon.png' }
-        ])
+        new CopyWebpackPlugin({
+            patterns: [
+                { from: './src/icon.png' }
+            ]
+        })
     ]
 };
