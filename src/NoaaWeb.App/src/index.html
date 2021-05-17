@@ -34,7 +34,7 @@
                         <td data-bind="if: !isUpcomingPass"><span data-bind="text: $root.getChannelText(channelB)"></span></td>
                         <td><span data-bind="text: maxElevation"></span>°</td>
                         <td data-bind="if: !isUpcomingPass"><span data-bind="text: gain"></span> dB</td>
-                        <td data-bind="foreach: isUpcomingPass ? [] : enhancementTypes"><a data-bind="attr: {href: 'data/'+$parent. imageDir+'/'+$parent.fileKey+'-'+$data+'.png', title: $root.getEnhancementTypeTitle($data)}, text: $data"></a> </td>
+                        <td data-bind="foreach: isUpcomingPass ? [] : enhancementTypes" class="links"><a data-bind="attr: {href: 'data/'+$parent. imageDir+'/'+$parent.fileKey+'-'+$data+'.png', title: $root.getEnhancementTypeTitle($data)}, text: $data"></a></td>
                         <td data-bind="if: projectionTypes != null && projectionTypes !== 0"><a data-bind="attr: {href: 'projection.html#'+fileKey}">Show</a></td>
                     </tr>
                 </tbody>
