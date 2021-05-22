@@ -150,10 +150,23 @@ namespace NoaaWeb.Service
                                 endTime = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc).AddSeconds(double.Parse(endTimeMatch.Groups[1].Value));
                             }
 
-                            var channelA = Regex.Match(metaData, @"^CHAN_A=Channel A: (.*) \(.*\)$", RegexOptions.Multiline).Groups[1].Value;
-                            var channelB = Regex.Match(metaData, @"^CHAN_B=Channel B: (.*) \(.*\)$", RegexOptions.Multiline).Groups[1].Value;
-                            var gain = -double.Parse(Regex.Match(metaData, @"^GAIN=Gain: (.*)$", RegexOptions.Multiline).Groups[1].Value, CultureInfo.InvariantCulture);
-                            var maxElev = int.Parse(Regex.Match(metaData, @"^MAXELEV=(.*)$", RegexOptions.Multiline).Groups[1].Value, CultureInfo.InvariantCulture);
+                            Match channelAMatch = Regex.Match(metaData, @"^CHAN_A=Channel A: (.*) \(.*\)$", RegexOptions.Multiline);
+                            Match channelBMatch = Regex.Match(metaData, @"^CHAN_B=Channel B: (.*) \(.*\)$", RegexOptions.Multiline);
+                            Match gainMatch = Regex.Match(metaData, @"^GAIN=Gain: (.*)$", RegexOptions.Multiline);
+                            Match maxElevMatch = Regex.Match(metaData, @"^MAXELEV=(.*)$", RegexOptions.Multiline);
+
+                            if (!channelAMatch.Success ||
+                                !channelBMatch.Success ||
+                                !gainMatch.Success || !double.TryParse(gainMatch.Groups[1].Value, NumberStyles.Float, CultureInfo.InvariantCulture, out var gainRaw) ||
+                                !maxElevMatch.Success || !int.TryParse(maxElevMatch.Groups[1].Value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var maxElev))
+                            {
+                                _logger.LogInformation("metadata invalid for {FileKey}", fileKey);
+                                continue;
+                            }
+
+                            var channelA = channelAMatch.Groups[1].Value;
+                            var channelB = channelBMatch.Groups[1].Value;
+                            var gain = -gainRaw;
 
                             var enhancementTypes = EnhancementTypes.None;
 
