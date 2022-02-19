@@ -1,10 +1,10 @@
-FROM mcr.microsoft.com/dotnet/core/sdk:3.1 AS build
+FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
 WORKDIR /app/src
 COPY src/ .
 RUN dotnet restore NoaaWeb.Service/NoaaWeb.Service.csproj
 RUN dotnet publish -c Release NoaaWeb.Service/NoaaWeb.Service.csproj -o /app/build
 
-FROM mcr.microsoft.com/dotnet/core/runtime:3.1
+FROM mcr.microsoft.com/dotnet/runtime:6.0
 RUN apt-get update
 RUN apt-get install -y libc6-dev libgdiplus libx11-dev
 WORKDIR /app
