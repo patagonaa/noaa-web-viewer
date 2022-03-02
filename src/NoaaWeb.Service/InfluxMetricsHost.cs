@@ -23,14 +23,17 @@ namespace NoaaWeb.Service
                 Interval = 1000 * 60 * 15, // 15 minutes
                 AutoReset = true
             };
-            _timer.Elapsed += (sender, e) => _sender.Send(_cts.Token);
+            _timer.Elapsed += (sender, e) =>
+            {
+                _ = _sender.Send(_cts.Token);
+            };
             _sender = sender;
         }
 
         public Task StartAsync(CancellationToken cancellationToken)
         {
             _timer.Start();
-            _sender.Send(cancellationToken);
+            _ = _sender.Send(cancellationToken);
             return Task.CompletedTask;
         }
 

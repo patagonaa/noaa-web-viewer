@@ -7,12 +7,13 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace NoaaWeb.Service
 {
     class InfluxMetricsSender
     {
-        private readonly object _sendLock = new object();
+        private readonly SemaphoreSlim _sendLock = new SemaphoreSlim(1, 1);
         private readonly ILogger<InfluxMetricsSender> _logger;
         private readonly ISatellitePassRepository _passRepository;
         private readonly LineProtocolClient _client;
@@ -34,59 +35,41 @@ namespace NoaaWeb.Service
             }
         }
 
-        public void Send(CancellationToken cancellationToken)
+        public async Task Send(CancellationToken cancellationToken)
         {
             if (_client == null)
                 return;
 
-            lock (_sendLock)
+            try
             {
+                await _sendLock.WaitAsync(cancellationToken);
+
                 _logger.LogInformation("Starting InfluxDB metrics send.");
 
                 try
                 {
-                    var passes = _passRepository.Get()
+                    var allPasses = _passRepository.Get()
                         .Where(x => x.StartTime > _lastPass)
                         .OrderBy(x => x.StartTime)
-                        .Take(500)
                         .ToList();
 
-                    if (passes.Count > 0)
+                    foreach (var chunk in allPasses.Chunk(500))
                     {
                         var points = new LineProtocolPayload();
 
-                        foreach (var pass in passes)
+                        foreach (var pass in chunk)
                         {
-                            var fields = new Dictionary<string, object>
-                            {
-                                {"enhancementTypes", (int)pass.EnhancementTypes},
-                                {"projectionTypes", (int)pass.ProjectionTypes},
-                                {"gain", pass.Gain },
-                                {"maxElevation", pass.MaxElevation }
-                            };
-                            if (pass.EndTime.HasValue)
-                            {
-                                fields.Add("durationSeconds", (pass.EndTime.Value - pass.StartTime).TotalSeconds);
-                            }
-
-                            var tags = new Dictionary<string, string>
-                            {
-                                {"sat", pass.SatelliteName },
-                                {"channelA", pass.ChannelA },
-                                {"channelB", pass.ChannelB },
-                            };
-
-                            var passPoint = new LineProtocolPoint("pass", fields, tags, pass.StartTime);
-                            points.Add(passPoint);
+                            points.Add(MapPass(pass));
                         }
-                        _logger.LogInformation("Adding {PassCount} new passes to InfluxDB", passes.Count);
 
-                        var writeResult = _client.WriteAsync(points, cancellationToken).Result;
+                        var writeResult = await _client.WriteAsync(points, cancellationToken);
 
                         if (!writeResult.Success)
                             throw new Exception(writeResult.ErrorMessage);
 
-                        _lastPass = passes.Max(x => x.StartTime);
+                        _logger.LogInformation("Written {PassCount} passes to InfluxDB", chunk.Length);
+
+                        _lastPass = chunk.Max(x => x.StartTime);
                     }
 
                     _logger.LogInformation("InfluxDB write success!");
@@ -96,6 +79,34 @@ namespace NoaaWeb.Service
                     _logger.LogError(ex, "Error while sending InfluxDB metrics");
                 }
             }
+            finally
+            {
+                _sendLock.Release();
+            }
+        }
+
+        private static LineProtocolPoint MapPass(SatellitePass pass)
+        {
+            var fields = new Dictionary<string, object>
+            {
+                {"enhancementTypes", (int)pass.EnhancementTypes},
+                {"projectionTypes", (int)pass.ProjectionTypes},
+                {"gain", pass.Gain },
+                {"maxElevation", pass.MaxElevation }
+            };
+            if (pass.EndTime.HasValue)
+            {
+                fields.Add("durationSeconds", (pass.EndTime.Value - pass.StartTime).TotalSeconds);
+            }
+
+            var tags = new Dictionary<string, string>
+            {
+                {"sat", pass.SatelliteName },
+                {"channelA", pass.ChannelA },
+                {"channelB", pass.ChannelB },
+            };
+
+            return new LineProtocolPoint("pass", fields, tags, pass.StartTime);
         }
     }
 }
