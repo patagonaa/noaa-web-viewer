@@ -101,6 +101,7 @@ namespace NoaaWeb.Service
 
             var tags = new Dictionary<string, string>
             {
+                {"site", pass.Site },
                 {"sat", pass.SatelliteName },
                 {"channelA", pass.ChannelA },
                 {"channelB", pass.ChannelB },
