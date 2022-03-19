@@ -28,6 +28,7 @@ namespace NoaaWeb.Service
         private readonly Counter _scrapeDurationCounter;
         private readonly Counter _passCounter;
         private readonly Counter _passDurationCounter;
+        private readonly IList<string> _invalidMetaPasses = new List<string>();
         private readonly object _scrapeLock = new object();
 
         public SatellitePassScraper(ILogger<SatellitePassScraper> logger, IOptions<SiteConfiguration> siteConfig, ISatellitePassRepository satellitePassRepository, WebDavFileProvider fileProvider)
@@ -114,7 +115,7 @@ namespace NoaaWeb.Service
 
                             var fileKey = Path.GetFileNameWithoutExtension(metaFileInfo.Name);
 
-                            if (existingPasses.Contains(fileKey))
+                            if (existingPasses.Contains(fileKey) || _invalidMetaPasses.Contains(GetUniquePassKey(site, fileKey)))
                             {
                                 continue;
                             }
@@ -161,6 +162,7 @@ namespace NoaaWeb.Service
                                 !maxElevMatch.Success || !int.TryParse(maxElevMatch.Groups[1].Value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var maxElev))
                             {
                                 _logger.LogInformation("metadata invalid for {FileKey}", fileKey);
+                                _invalidMetaPasses.Add(GetUniquePassKey(site, fileKey));
                                 continue;
                             }
 
@@ -289,6 +291,11 @@ namespace NoaaWeb.Service
             }
 
             _logger.LogInformation("scrape done!");
+        }
+
+        private static string GetUniquePassKey(string site, string fileKey)
+        {
+            return $"{site}/{fileKey}";
         }
 
         private string GetThumbnail(Stream file)

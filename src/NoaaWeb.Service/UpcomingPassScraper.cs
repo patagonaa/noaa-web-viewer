@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Threading;
 
@@ -18,6 +19,7 @@ namespace NoaaWeb.Service
         private readonly SiteConfiguration _siteConfig;
         private readonly IUpcomingPassRepository _upcomingPassRepository;
         private readonly WebDavFileProvider _fileProvider;
+        private readonly IDictionary<string, DateTimeOffset> _lastModifiedBySite = new Dictionary<string, DateTimeOffset>();
         private readonly object _scrapeLock = new object();
 
         public UpcomingPassScraper(ILogger<UpcomingPassScraper> logger, IOptions<SiteConfiguration> siteConfig, IUpcomingPassRepository upcomingPassRepository, WebDavFileProvider fileProvider)
@@ -34,11 +36,16 @@ namespace NoaaWeb.Service
             {
                 _logger.LogInformation("starting upcoming pass scrape");
 
-                var upcomingPasses = new List<UpcomingSatellitePass>();
+                var upcomingPasses = _upcomingPassRepository.Get().ToList();
 
                 foreach (var site in _siteConfig.Sites ?? new List<string> { "" })
                 {
-                    upcomingPasses.AddRange(Scrape(site));
+                    var sitePasses = Scrape(site);
+                    if (sitePasses != null)
+                    {
+                        upcomingPasses.RemoveAll(x => x.Site == site);
+                        upcomingPasses.AddRange(sitePasses);
+                    }
                 }
 
                 _upcomingPassRepository.Clear();
@@ -56,6 +63,13 @@ namespace NoaaWeb.Service
                 _logger.LogWarning("Upcoming Passes file does not exist!");
                 return new List<UpcomingSatellitePass>();
             }
+            var currentLastModified = upcomingPassFileInfo.LastModified;
+            if (currentLastModified != DateTimeOffset.MinValue && _lastModifiedBySite.TryGetValue(site, out var savedLastModified) && currentLastModified == savedLastModified)
+            {
+                _logger.LogInformation("Upcoming passes file has not been modified");
+                return null;
+            }
+            _lastModifiedBySite[site] = currentLastModified;
 
             var toReturn = new List<UpcomingSatellitePass>();
             using (var sr = new StreamReader(upcomingPassFileInfo.CreateReadStream(), Encoding.UTF8))
