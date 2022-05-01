@@ -49,7 +49,7 @@ namespace NoaaWeb.Service
             services.Configure<WebDavConfiguration>(ctx.Configuration.GetSection("WebDav"));
             services.Configure<InfluxMetricsConfiguration>(ctx.Configuration.GetSection("InfluxDB"));
 
-            services.AddTransient<WebDavFileProvider>();
+            services.AddTransient<NoaaWebDavFileProvider>();
 
             services.AddHostedService<MetricsServer>();
 

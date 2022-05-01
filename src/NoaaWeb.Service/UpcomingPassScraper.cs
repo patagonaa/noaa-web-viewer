@@ -18,11 +18,11 @@ namespace NoaaWeb.Service
         private readonly ILogger<UpcomingPassScraper> _logger;
         private readonly SiteConfiguration _siteConfig;
         private readonly IUpcomingPassRepository _upcomingPassRepository;
-        private readonly WebDavFileProvider _fileProvider;
+        private readonly NoaaWebDavFileProvider _fileProvider;
         private readonly IDictionary<string, DateTimeOffset> _lastModifiedBySite = new Dictionary<string, DateTimeOffset>();
         private readonly object _scrapeLock = new object();
 
-        public UpcomingPassScraper(ILogger<UpcomingPassScraper> logger, IOptions<SiteConfiguration> siteConfig, IUpcomingPassRepository upcomingPassRepository, WebDavFileProvider fileProvider)
+        public UpcomingPassScraper(ILogger<UpcomingPassScraper> logger, IOptions<SiteConfiguration> siteConfig, IUpcomingPassRepository upcomingPassRepository, NoaaWebDavFileProvider fileProvider)
         {
             _logger = logger;
             _siteConfig = siteConfig.Value;

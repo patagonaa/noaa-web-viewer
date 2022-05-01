@@ -23,7 +23,7 @@ namespace NoaaWeb.Service
         private readonly ILogger<SatellitePassScraper> _logger;
         private readonly SiteConfiguration _siteConfig;
         private readonly ISatellitePassRepository _satellitePassRepository;
-        private readonly WebDavFileProvider _fileProvider;
+        private readonly NoaaWebDavFileProvider _fileProvider;
         private readonly Counter _scrapeCounter;
         private readonly Counter _scrapeDurationCounter;
         private readonly Counter _passCounter;
@@ -31,7 +31,7 @@ namespace NoaaWeb.Service
         private readonly IList<string> _invalidMetaPasses = new List<string>();
         private readonly object _scrapeLock = new object();
 
-        public SatellitePassScraper(ILogger<SatellitePassScraper> logger, IOptions<SiteConfiguration> siteConfig, ISatellitePassRepository satellitePassRepository, WebDavFileProvider fileProvider)
+        public SatellitePassScraper(ILogger<SatellitePassScraper> logger, IOptions<SiteConfiguration> siteConfig, ISatellitePassRepository satellitePassRepository, NoaaWebDavFileProvider fileProvider)
         {
             _logger = logger;
             _siteConfig = siteConfig.Value;
