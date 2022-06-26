@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -14,6 +15,9 @@ namespace NoaaWeb.Data.SatellitePass
         private readonly FileDbConfiguration _dbConfig;
         private readonly ILogger<SatellitePassFileRepository> _logger;
 
+        private IList<SatellitePass> _cache;
+        private DateTime _cacheTime;
+
         public SatellitePassFileRepository(ILogger<SatellitePassFileRepository> logger, IOptions<FileDbConfiguration> dbConfig)
         {
             _dbConfig = dbConfig.Value;
@@ -22,10 +26,24 @@ namespace NoaaWeb.Data.SatellitePass
 
         public IQueryable<SatellitePass> Get()
         {
+            var file = new FileInfo(GetFileName());
+
+            if (!file.Exists)
+            {
+                return Enumerable.Empty<SatellitePass>().AsQueryable();
+            }
+
+            if (_cache != null && file.LastWriteTimeUtc == _cacheTime)
+            {
+                return _cache.AsQueryable();
+            }
+
             using (var dbsr = new StreamReader(OpenDb(FileAccess.Read, FileShare.Read), Encoding.UTF8))
             {
                 var dbStr = dbsr.ReadToEnd();
                 var db = dbStr.Length == 0 ? new List<SatellitePass>() : JsonConvert.DeserializeObject<IList<SatellitePass>>(dbStr);
+                _cache = db;
+                _cacheTime = file.LastWriteTimeUtc;
                 return db.AsQueryable();
             }
         }
@@ -53,13 +71,18 @@ namespace NoaaWeb.Data.SatellitePass
             }
         }
 
+        private string GetFileName()
+        {
+            return Path.Combine(_dbConfig.DbDirectory, "passes.json");
+        }
+
         private FileStream OpenDb(FileAccess access, FileShare share)
         {
             while (true)
             {
                 try
                 {
-                    return File.Open(Path.Combine(_dbConfig.DbDirectory, "passes.json"), FileMode.OpenOrCreate, access, share);
+                    return File.Open(GetFileName(), FileMode.OpenOrCreate, access, share);
                 }
                 catch (IOException ioex)
                 {
