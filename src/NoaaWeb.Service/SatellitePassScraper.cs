@@ -158,7 +158,7 @@ namespace NoaaWeb.Service
 
                             if (!channelAMatch.Success ||
                                 !channelBMatch.Success ||
-                                !gainMatch.Success || !double.TryParse(gainMatch.Groups[1].Value, NumberStyles.Float, CultureInfo.InvariantCulture, out var gainRaw) ||
+                                !gainMatch.Success || !double.TryParse(gainMatch.Groups[1].Value, NumberStyles.Float, CultureInfo.InvariantCulture, out var gainRaw) || double.IsNaN(gainRaw) ||
                                 !maxElevMatch.Success || !int.TryParse(maxElevMatch.Groups[1].Value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var maxElev))
                             {
                                 _logger.LogInformation("metadata invalid for {FileKey}", fileKey);
