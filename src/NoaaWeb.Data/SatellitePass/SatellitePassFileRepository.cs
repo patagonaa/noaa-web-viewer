@@ -3,6 +3,7 @@ using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -41,7 +42,9 @@ namespace NoaaWeb.Data.SatellitePass
             using (var dbsr = new StreamReader(OpenDb(FileAccess.Read, FileShare.Read), Encoding.UTF8))
             {
                 var dbStr = dbsr.ReadToEnd();
+                var sw = Stopwatch.StartNew();
                 var db = dbStr.Length == 0 ? new List<SatellitePass>() : JsonConvert.DeserializeObject<IList<SatellitePass>>(dbStr);
+                _logger.LogInformation("DB deserialize took {ElapsedMilliseconds}ms", sw.ElapsedMilliseconds);
                 _cache = db;
                 _cacheTime = file.LastWriteTimeUtc;
                 return db.AsQueryable();
@@ -52,6 +55,7 @@ namespace NoaaWeb.Data.SatellitePass
         {
             using (var dbfile = OpenDb(FileAccess.ReadWrite, FileShare.None))
             {
+                var sw = Stopwatch.StartNew();
                 IList<SatellitePass> db;
                 using (var dbsr = new StreamReader(dbfile, Encoding.UTF8, false, 1024, true))
                 {
@@ -68,6 +72,8 @@ namespace NoaaWeb.Data.SatellitePass
                 {
                     sbsw.Write(JsonConvert.SerializeObject(db, Formatting.Indented));
                 }
+
+                _logger.LogInformation("DB insert took {ElapsedMilliseconds}ms", sw.ElapsedMilliseconds);
             }
         }
 
