@@ -79,6 +79,8 @@ namespace NoaaWeb.Service
             }
         }
 
+        private Dictionary<string, (int Year, int Month)> _lastSuccessfulScrape = new();
+
         private void Scrape(CancellationToken cancellationToken, string site)
         {
             try
@@ -86,7 +88,9 @@ namespace NoaaWeb.Service
                 _logger.LogInformation("starting pass scrape for site {Site}", site);
                 var sw = Stopwatch.StartNew();
 
-                var existingPasses = _satellitePassRepository.Get().Select(x => x.FileKey).ToHashSet();
+                var lastSuccessfulScrape = _lastSuccessfulScrape.TryGetValue(site, out var tmp) ? tmp : (Year: -1, Month: -1);
+
+                var existingPasses = _satellitePassRepository.Get().Select(x => GetUniquePassKey(x.Site, x.FileKey)).ToHashSet();
 
                 var baseUrl = site == "" ? "" : ("/" + site);
 
@@ -97,11 +101,23 @@ namespace NoaaWeb.Service
                     if (cancellationToken.IsCancellationRequested)
                         break;
 
+                    if (!int.TryParse(year, out var dirYear) || dirYear < lastSuccessfulScrape.Year)
+                    {
+                        _logger.LogInformation("skipping {ScrapeYear}", dirYear);
+                        continue;
+                    }
+
                     var monthsDir = _fileProvider.GetDirectoryContents($"{baseUrl}/meta/{year}");
                     foreach (var month in monthsDir.Where(x => x.IsDirectory).Select(x => x.Name).OrderBy(x => x))
                     {
                         if (cancellationToken.IsCancellationRequested)
                             break;
+
+                        if (!int.TryParse(month, out var dirMonth) || dirMonth < lastSuccessfulScrape.Month)
+                        {
+                            _logger.LogInformation("skipping {ScrapeMonth}", $"{year}-{month}");
+                            continue;
+                        }
 
                         var monthDir = _fileProvider.GetDirectoryContents($"{baseUrl}/meta/{year}/{month}");
                         var monthImagesDir = _fileProvider.GetDirectoryContents($"{baseUrl}/images/{year}/{month}");
@@ -115,7 +131,7 @@ namespace NoaaWeb.Service
 
                             var fileKey = Path.GetFileNameWithoutExtension(metaFileInfo.Name);
 
-                            if (existingPasses.Contains(fileKey) || _invalidMetaPasses.Contains(GetUniquePassKey(site, fileKey)))
+                            if (existingPasses.Contains(GetUniquePassKey(site, fileKey)) || _invalidMetaPasses.Contains(GetUniquePassKey(site, fileKey)))
                             {
                                 continue;
                             }
@@ -276,11 +292,12 @@ namespace NoaaWeb.Service
                             if (endTime.HasValue)
                                 _passDurationCounter.WithLabels(satName).Inc((endTime.Value - startTime).TotalSeconds);
                             _logger.LogInformation("{FileKey} successfully scraped", fileKey);
+
+                            _lastSuccessfulScrape[site] = (dirYear, dirMonth);
                         }
                     }
                 }
                 sw.Stop();
-
                 _scrapeCounter.WithLabels("success").Inc();
                 _scrapeDurationCounter.Inc(sw.Elapsed.TotalSeconds);
             }
