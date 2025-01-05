@@ -113,7 +113,7 @@ namespace NoaaWeb.Service
                         if (cancellationToken.IsCancellationRequested)
                             break;
 
-                        if (!int.TryParse(month, out var dirMonth) || dirMonth < lastSuccessfulScrape.Month)
+                        if (dirYear == lastSuccessfulScrape.Year && (!int.TryParse(month, out var dirMonth) || dirMonth < lastSuccessfulScrape.Month))
                         {
                             _logger.LogInformation("skipping {ScrapeMonth}", $"{year}-{month}");
                             continue;
