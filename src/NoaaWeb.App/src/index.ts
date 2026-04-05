@@ -133,7 +133,6 @@ class AppViewModel {
 interface AppState {
     page?: number;
     sorter?: { field: string, dir: 'asc' | 'desc' };
-    filters: { name: string, value: any }[]
 }
 
 interface SatellitePassResult {
