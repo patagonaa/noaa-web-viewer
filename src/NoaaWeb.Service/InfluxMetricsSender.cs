@@ -87,9 +87,9 @@ namespace NoaaWeb.Service
 
         private static LineProtocolPoint MapPass(SatellitePass pass)
         {
-            var fields = new Dictionary<string, object>
+            var fields = new Dictionary<string, object?>
             {
-                {"enhancementTypes", (int)pass.EnhancementTypes},
+                {"enhancementTypes", (int)pass.ImageTypes},
                 {"projectionTypes", (int)pass.ProjectionTypes},
                 {"gain", pass.Gain },
                 {"maxElevation", pass.MaxElevation }
@@ -99,12 +99,12 @@ namespace NoaaWeb.Service
                 fields.Add("durationSeconds", (pass.EndTime.Value - pass.StartTime).TotalSeconds);
             }
 
-            var tags = new Dictionary<string, string>
+            var tags = new Dictionary<string, string?>
             {
                 {"site", pass.Site },
                 {"sat", pass.SatelliteName },
-                {"channelA", pass.ChannelA },
-                {"channelB", pass.ChannelB },
+                {"channelA", pass.ChannelA ?? string.Empty },
+                {"channelB", pass.ChannelB ?? string.Empty },
             };
 
             return new LineProtocolPoint("pass", fields, tags, pass.StartTime);

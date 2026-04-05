@@ -41,7 +41,7 @@ class AppViewModel {
     mapPasses(pass: any) {
         return <SatellitePassViewModel>{
             ...pass,
-            enhancementTypes: this.getEnhancementTypes(pass.enhancementTypes),
+            imageTypes: this.getImageTypes(pass.imageTypes),
             startTime: new Date(pass.startTime)
         };
     }
@@ -67,35 +67,38 @@ class AppViewModel {
         window.location.hash = encodeURIComponent(JSON.stringify(state));
     }
 
-    getEnhancementTypes(types?: EnhancementTypes) {
+    getImageTypes(types?: ImageTypes) {
         let toReturn: string[] = [];
 
         if (types == null)
             return toReturn;
 
-        toReturn.push('RAW');
-
-        if (types & EnhancementTypes.Za) {
+        if (types & ImageTypes.Raw) {
+            toReturn.push('RAW');
+        }
+        if (types & ImageTypes.Za) {
             toReturn.push('ZA');
         }
-        if (types & EnhancementTypes.No) {
+        if (types & ImageTypes.No) {
             toReturn.push('NO');
         }
-        if (types & EnhancementTypes.Msa) {
+        if (types & ImageTypes.Msa) {
             toReturn.push('MSA');
         }
-        if (types & EnhancementTypes.Mcir) {
+        if (types & ImageTypes.Mcir) {
             toReturn.push('MCIR');
         }
-        if (types & EnhancementTypes.Therm) {
+        if (types & ImageTypes.Therm) {
             toReturn.push('THERM');
         }
 
         return toReturn;
     }
 
-    getEnhancementTypeTitle(type: string) {
+    getImageTypeTitle(type: string) {
         switch (type) {
+            case 'RAW':
+                return 'Raw received image.';
             case 'ZA':
                 return 'NOAA general purpose meteorological IR enhancement option.';
             case 'NO':
@@ -147,18 +150,19 @@ interface SatellitePassViewModel {
     channelB: string;
     maxElevation: number;
     gain?: number;
-    enhancementTypes?: EnhancementTypes;
+    imageTypes?: ImageTypes;
     thumbnailUri: string;
-    thumbnailEnhancementType: string;
+    thumbnailImageType: string;
     isUpcomingPass: boolean;
 }
 
-enum EnhancementTypes {
+enum ImageTypes {
     Za = 1 << 0,
     No = 1 << 1,
     Msa = 1 << 2,
     Mcir = 1 << 3,
-    Therm = 1 << 4
+    Therm = 1 << 4,
+    Raw = 1 << 5
 }
 
 function init() {

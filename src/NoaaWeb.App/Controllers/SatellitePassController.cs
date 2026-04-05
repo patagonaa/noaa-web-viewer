@@ -46,10 +46,10 @@ namespace NoaaWeb.App.Controllers
                 ChannelB = x.ChannelB,
                 MaxElevation = x.MaxElevation,
                 Gain = double.IsNaN(x.Gain ?? double.NaN) ? -1000 : x.Gain,
-                EnhancementTypes = x.EnhancementTypes,
+                ImageTypes = x.ImageTypes,
                 ProjectionTypes = x.ProjectionTypes,
                 ThumbnailUri = x.ThumbnailUri,
-                ThumbnailEnhancementType = x.ThumbnailEnhancementType,
+                ThumbnailImageType = x.ThumbnailImageType,
                 IsUpcomingPass = false
             }).Concat(upcomingPasses.Select(x => new SatellitePassViewModel
             {

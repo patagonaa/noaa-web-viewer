@@ -14,10 +14,10 @@ namespace NoaaWeb.App.Models
         public string? ChannelB { get; set; }
         public int? MaxElevation { get; set; }
         public double? Gain { get; set; }
-        public EnhancementTypes? EnhancementTypes { get; set; }
+        public ImageTypes? ImageTypes { get; set; }
         public ProjectionTypes? ProjectionTypes { get; set; }
         public string? ThumbnailUri { get; set; }
-        public string? ThumbnailEnhancementType { get; set; }
+        public string? ThumbnailImageType { get; set; }
         required public bool IsUpcomingPass { get; set; }
     }
 }

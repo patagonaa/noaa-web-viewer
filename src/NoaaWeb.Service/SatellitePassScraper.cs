@@ -191,7 +191,40 @@ namespace NoaaWeb.Service
 
         private SatellitePass? GetNonNoaaPass(string site, string fileKey, string satName, string metaData, string imagesDir, IDirectoryContents imagesDirContents)
         {
-            return null; // TODO
+            var startTimeStr = fileKey.Substring(0, 15);
+            var startTime = DateTime.ParseExact(startTimeStr, "yyyyMMdd-HHmmss", CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal);
+
+            var msaImage = _fileProvider.GetFileInfo($"{imagesDir}/{fileKey}-RAW.png");
+
+            if (!msaImage.Exists)
+            {
+                _logger.LogInformation("no msa image for {FileKey}", fileKey);
+                return null;
+            }
+
+            var toInsert = new SatellitePass
+            {
+                Site = site,
+                ImageDir = imagesDir,
+                FileKey = fileKey,
+                StartTime = startTime,
+                EndTime = null,
+                SatelliteName = satName,
+                ChannelA = null,
+                ChannelB = null,
+                Gain = null,
+                MaxElevation = null,
+                ImageTypes = ImageTypes.Msa,
+                ProjectionTypes = ProjectionTypes.None
+            };
+
+            using (var imageStream = msaImage.CreateReadStream())
+            {
+                toInsert.ThumbnailUri = GetThumbnail(imageStream);
+                toInsert.ThumbnailImageType = "MSA";
+            }
+
+            return toInsert;
         }
 
         private SatellitePass? GetNoaaPass(string site, string fileKey, string satName, string metaData, string imagesDir, IDirectoryContents imagesDirContents)
@@ -233,11 +266,11 @@ namespace NoaaWeb.Service
             var channelB = channelBMatch.Groups[1].Value;
             var gain = -gainRaw;
 
-            var enhancementTypes = EnhancementTypes.None;
+            var imageTypes = ImageTypes.Raw;
 
             if (new[] { channelA, channelB }.Any(x => x == "4") && new[] { channelA, channelB }.Any(x => x == "1" || x == "2"))
             {
-                enhancementTypes |= EnhancementTypes.Msa;
+                imageTypes |= ImageTypes.Msa;
             }
             else
             {
@@ -250,10 +283,10 @@ namespace NoaaWeb.Service
 
             if (new[] { channelA, channelB }.Any(x => x == "4"))
             {
-                enhancementTypes |= EnhancementTypes.Mcir;
-                enhancementTypes |= EnhancementTypes.Therm;
-                enhancementTypes |= EnhancementTypes.Za;
-                enhancementTypes |= EnhancementTypes.No;
+                imageTypes |= ImageTypes.Mcir;
+                imageTypes |= ImageTypes.Therm;
+                imageTypes |= ImageTypes.Za;
+                imageTypes |= ImageTypes.No;
             }
             else
             {
@@ -266,22 +299,22 @@ namespace NoaaWeb.Service
 
             var projectionTypes = ProjectionTypes.None;
 
-            if (enhancementTypes.HasFlag(EnhancementTypes.Msa) && imagesDirContents.Any(x => x.Name == $"{fileKey}-MSA-merc.png"))
+            if (imageTypes.HasFlag(ImageTypes.Msa) && imagesDirContents.Any(x => x.Name == $"{fileKey}-MSA-merc.png"))
             {
                 projectionTypes |= ProjectionTypes.MsaMercator;
             }
 
-            if (enhancementTypes.HasFlag(EnhancementTypes.Msa) && imagesDirContents.Any(x => x.Name == $"{fileKey}-MSA-stereo.png"))
+            if (imageTypes.HasFlag(ImageTypes.Msa) && imagesDirContents.Any(x => x.Name == $"{fileKey}-MSA-stereo.png"))
             {
                 projectionTypes |= ProjectionTypes.MsaStereographic;
             }
 
-            if (enhancementTypes.HasFlag(EnhancementTypes.Therm) && imagesDirContents.Any(x => x.Name == $"{fileKey}-THERM-merc.png"))
+            if (imageTypes.HasFlag(ImageTypes.Therm) && imagesDirContents.Any(x => x.Name == $"{fileKey}-THERM-merc.png"))
             {
                 projectionTypes |= ProjectionTypes.ThermMercator;
             }
 
-            if (enhancementTypes.HasFlag(EnhancementTypes.Therm) && imagesDirContents.Any(x => x.Name == $"{fileKey}-THERM-stereo.png"))
+            if (imageTypes.HasFlag(ImageTypes.Therm) && imagesDirContents.Any(x => x.Name == $"{fileKey}-THERM-stereo.png"))
             {
                 projectionTypes |= ProjectionTypes.ThermStereographic;
             }
@@ -298,32 +331,32 @@ namespace NoaaWeb.Service
                 ChannelB = channelB,
                 Gain = gain,
                 MaxElevation = maxElev,
-                EnhancementTypes = enhancementTypes,
+                ImageTypes = imageTypes,
                 ProjectionTypes = projectionTypes
             };
 
             IFileInfo? thumbnailSource = null;
-            string? thumbnailEnhancementType = null;
-            if (enhancementTypes.HasFlag(EnhancementTypes.Msa))
+            string? thumbnailImageType = null;
+            if (imageTypes.HasFlag(ImageTypes.Msa))
             {
                 var msaImage = _fileProvider.GetFileInfo($"{imagesDir}/{fileKey}-MSA.png");
 
                 if (msaImage.Exists)
                 {
                     thumbnailSource = msaImage;
-                    thumbnailEnhancementType = "MSA";
+                    thumbnailImageType = "MSA";
                 }
             }
             if (thumbnailSource == null)
             {
                 thumbnailSource = rawImage;
-                thumbnailEnhancementType = "RAW";
+                thumbnailImageType = "RAW";
             }
 
             using (var imageStream = thumbnailSource.CreateReadStream())
             {
                 toInsert.ThumbnailUri = GetThumbnail(imageStream);
-                toInsert.ThumbnailEnhancementType = thumbnailEnhancementType;
+                toInsert.ThumbnailImageType = thumbnailImageType;
             }
 
             return toInsert;

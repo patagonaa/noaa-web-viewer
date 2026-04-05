@@ -122,29 +122,29 @@ class ProjectionViewModel {
     }
 
     getFilePath(item: ProjectionItemViewModel, projectionType: ProjectionTypes) {
-        let enhancementTypeString = '';
+        let imageTypeString = '';
         let projectionTypeString = '';
 
         switch (projectionType) {
             case ProjectionTypes.MsaMercator:
-                enhancementTypeString = 'MSA';
+                imageTypeString = 'MSA';
                 projectionTypeString = 'merc';
                 break;
             case ProjectionTypes.MsaStereographic:
-                enhancementTypeString = 'MSA';
+                imageTypeString = 'MSA';
                 projectionTypeString = 'stereo';
                 break;
             case ProjectionTypes.ThermMercator:
-                enhancementTypeString = 'THERM';
+                imageTypeString = 'THERM';
                 projectionTypeString = 'merc';
                 break;
             case ProjectionTypes.ThermStereographic:
-                enhancementTypeString = 'THERM';
+                imageTypeString = 'THERM';
                 projectionTypeString = 'stereo';
                 break;
         }
 
-        return `data${item.imageDir}/${item.fileKey}-${enhancementTypeString}-${projectionTypeString}.png`;
+        return `data${item.imageDir}/${item.fileKey}-${imageTypeString}-${projectionTypeString}.png`;
     }
 
     getProjectionTypes(projectionTypes: ProjectionTypes) {

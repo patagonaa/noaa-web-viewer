@@ -13,10 +13,10 @@ namespace NoaaWeb.Data.SatellitePass
         public string? ChannelB { get; set; }
         public int? MaxElevation { get; set; }
         public double? Gain { get; set; }
-        required public EnhancementTypes EnhancementTypes { get; set; }
+        required public ImageTypes ImageTypes { get; set; }
         required public ProjectionTypes ProjectionTypes { get; set; }
         public string? ThumbnailUri { get; set; }
-        public string? ThumbnailEnhancementType { get; set; }
+        public string? ThumbnailImageType { get; set; }
         required public string ImageDir { get; set; }
     }
 }
