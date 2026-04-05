@@ -1,10 +1,10 @@
 ﻿using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Newtonsoft.Json;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 using System.Threading;
 
 namespace NoaaWeb.Data.UpcomingPass
@@ -13,11 +13,16 @@ namespace NoaaWeb.Data.UpcomingPass
     {
         private readonly FileDbConfiguration _dbConfig;
         private readonly ILogger<UpcomingPassFileRepository> _logger;
+        private readonly JsonSerializerOptions _serializerOptions;
 
         public UpcomingPassFileRepository(ILogger<UpcomingPassFileRepository> logger, IOptions<FileDbConfiguration> dbConfig)
         {
             _dbConfig = dbConfig.Value;
             _logger = logger;
+            _serializerOptions = new JsonSerializerOptions(JsonSerializerDefaults.General)
+            {
+                WriteIndented = true
+            };
         }
 
         public IQueryable<UpcomingSatellitePass> Get()
@@ -25,7 +30,7 @@ namespace NoaaWeb.Data.UpcomingPass
             using (var dbsr = new StreamReader(OpenDb(FileAccess.Read, FileShare.Read), Encoding.UTF8))
             {
                 var dbStr = dbsr.ReadToEnd();
-                var db = dbStr.Length == 0 ? new List<UpcomingSatellitePass>() : JsonConvert.DeserializeObject<IList<UpcomingSatellitePass>>(dbStr);
+                var db = (dbStr.Length == 0 ? null : JsonSerializer.Deserialize<List<UpcomingSatellitePass>>(dbStr, _serializerOptions)) ?? [];
                 return db.AsQueryable();
             }
         }
@@ -38,7 +43,7 @@ namespace NoaaWeb.Data.UpcomingPass
                 using (var dbsr = new StreamReader(dbfile, Encoding.UTF8, false, 1024, true))
                 {
                     var dbStr = dbsr.ReadToEnd();
-                    db = dbStr.Length == 0 ? new List<UpcomingSatellitePass>() : JsonConvert.DeserializeObject<List<UpcomingSatellitePass>>(dbStr);
+                    db = (dbStr.Length == 0 ? null : JsonSerializer.Deserialize<List<UpcomingSatellitePass>>(dbStr, _serializerOptions)) ?? [];
                 }
 
                 db.AddRange(passes);
@@ -48,7 +53,7 @@ namespace NoaaWeb.Data.UpcomingPass
 
                 using (var sbsw = new StreamWriter(dbfile, Encoding.UTF8))
                 {
-                    sbsw.Write(JsonConvert.SerializeObject(db, Formatting.Indented));
+                    sbsw.Write(JsonSerializer.Serialize(db, _serializerOptions));
                 }
             }
         }
@@ -62,7 +67,7 @@ namespace NoaaWeb.Data.UpcomingPass
 
                 using (var sbsw = new StreamWriter(dbfile, Encoding.UTF8))
                 {
-                    sbsw.Write(JsonConvert.SerializeObject(new List<UpcomingSatellitePass>(), Formatting.Indented));
+                    sbsw.Write(JsonSerializer.Serialize(new List<UpcomingSatellitePass>(), _serializerOptions));
                 }
             }
         }

@@ -1,12 +1,12 @@
 ﻿using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 using System.Threading;
 
 namespace NoaaWeb.Data.SatellitePass
@@ -15,14 +15,18 @@ namespace NoaaWeb.Data.SatellitePass
     {
         private readonly FileDbConfiguration _dbConfig;
         private readonly ILogger<SatellitePassFileRepository> _logger;
-
-        private IList<SatellitePass> _cache;
+        private readonly JsonSerializerOptions _serializerOptions;
+        private IList<SatellitePass>? _cache;
         private DateTime _cacheTime;
 
         public SatellitePassFileRepository(ILogger<SatellitePassFileRepository> logger, IOptions<FileDbConfiguration> dbConfig)
         {
             _dbConfig = dbConfig.Value;
             _logger = logger;
+            _serializerOptions = new JsonSerializerOptions(JsonSerializerDefaults.General)
+            {
+                WriteIndented = true
+            };
         }
 
         public IQueryable<SatellitePass> Get()
@@ -43,7 +47,7 @@ namespace NoaaWeb.Data.SatellitePass
             {
                 var dbStr = dbsr.ReadToEnd();
                 var sw = Stopwatch.StartNew();
-                var db = dbStr.Length == 0 ? new List<SatellitePass>() : JsonConvert.DeserializeObject<IList<SatellitePass>>(dbStr);
+                var db = (dbStr.Length == 0 ? null : JsonSerializer.Deserialize<IList<SatellitePass>>(dbStr, _serializerOptions)) ?? [];
                 _logger.LogInformation("DB deserialize took {ElapsedMilliseconds}ms", sw.ElapsedMilliseconds);
                 _cache = db;
                 _cacheTime = file.LastWriteTimeUtc;
@@ -53,28 +57,26 @@ namespace NoaaWeb.Data.SatellitePass
 
         public void Insert(SatellitePass pass)
         {
-            using (var dbfile = OpenDb(FileAccess.ReadWrite, FileShare.None))
+            using var dbfile = OpenDb(FileAccess.ReadWrite, FileShare.None);
+            var sw = Stopwatch.StartNew();
+            IList<SatellitePass> db;
+            using (var dbsr = new StreamReader(dbfile, Encoding.UTF8, false, 1024, true))
             {
-                var sw = Stopwatch.StartNew();
-                IList<SatellitePass> db;
-                using (var dbsr = new StreamReader(dbfile, Encoding.UTF8, false, 1024, true))
-                {
-                    var dbStr = dbsr.ReadToEnd();
-                    db = dbStr.Length == 0 ? new List<SatellitePass>() : JsonConvert.DeserializeObject<IList<SatellitePass>>(dbStr);
-                }
-
-                db.Add(pass);
-
-                dbfile.Position = 0;
-                dbfile.SetLength(0);
-
-                using (var sbsw = new StreamWriter(dbfile, Encoding.UTF8, 1024, true))
-                {
-                    sbsw.Write(JsonConvert.SerializeObject(db, Formatting.Indented));
-                }
-
-                _logger.LogInformation("DB insert took {ElapsedMilliseconds}ms", sw.ElapsedMilliseconds);
+                var dbStr = dbsr.ReadToEnd() ?? string.Empty;
+                db = (dbStr.Length == 0 ? null : JsonSerializer.Deserialize<IList<SatellitePass>>(dbStr, _serializerOptions)) ?? [];
             }
+
+            db.Add(pass);
+
+            dbfile.Position = 0;
+            dbfile.SetLength(0);
+
+            using (var sbsw = new StreamWriter(dbfile, Encoding.UTF8, 1024, true))
+            {
+                sbsw.Write(JsonSerializer.Serialize(db, _serializerOptions));
+            }
+
+            _logger.LogInformation("DB insert took {ElapsedMilliseconds}ms", sw.ElapsedMilliseconds);
         }
 
         private string GetFileName()
