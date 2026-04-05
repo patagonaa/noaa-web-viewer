@@ -25,7 +25,7 @@ namespace NoaaWeb.App.Controllers
         }
 
         [HttpGet]
-        public SatellitePassResult Get(string sortField, string sortDir, int page = 0)
+        public SatellitePassResult Get(string? sortField, string? sortDir, int page = 0)
         {
             var passes = _passRepository.Get().ToList(); // todo: when/if this is a real database some day, we really shouldn't do ToList here...
 
