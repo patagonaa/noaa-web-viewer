@@ -3,7 +3,6 @@ using Microsoft.Extensions.Options;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Text.Json;
 using System.Threading;
 
@@ -27,49 +26,31 @@ namespace NoaaWeb.Data.UpcomingPass
 
         public IQueryable<UpcomingSatellitePass> Get()
         {
-            using (var dbsr = new StreamReader(OpenDb(FileAccess.Read, FileShare.Read), Encoding.UTF8))
-            {
-                var dbStr = dbsr.ReadToEnd();
-                var db = (dbStr.Length == 0 ? null : JsonSerializer.Deserialize<List<UpcomingSatellitePass>>(dbStr, _serializerOptions)) ?? [];
-                return db.AsQueryable();
-            }
+            using var dbfile = OpenDb(FileAccess.Read, FileShare.Read);
+            var db = (dbfile.Length == 0 ? null : JsonSerializer.Deserialize<List<UpcomingSatellitePass>>(dbfile, _serializerOptions)) ?? [];
+            return db.AsQueryable();
         }
 
         public void Insert(IList<UpcomingSatellitePass> passes)
         {
-            using (var dbfile = OpenDb(FileAccess.ReadWrite, FileShare.None))
-            {
-                List<UpcomingSatellitePass> db;
-                using (var dbsr = new StreamReader(dbfile, Encoding.UTF8, false, 1024, true))
-                {
-                    var dbStr = dbsr.ReadToEnd();
-                    db = (dbStr.Length == 0 ? null : JsonSerializer.Deserialize<List<UpcomingSatellitePass>>(dbStr, _serializerOptions)) ?? [];
-                }
+            using var dbfile = OpenDb(FileAccess.ReadWrite, FileShare.None);
+            var db = (dbfile.Length == 0 ? null : JsonSerializer.Deserialize<List<UpcomingSatellitePass>>(dbfile, _serializerOptions)) ?? [];
 
-                db.AddRange(passes);
+            db.AddRange(passes);
 
-                dbfile.Position = 0;
-                dbfile.SetLength(0);
+            dbfile.Position = 0;
+            dbfile.SetLength(0);
 
-                using (var sbsw = new StreamWriter(dbfile, Encoding.UTF8))
-                {
-                    sbsw.Write(JsonSerializer.Serialize(db, _serializerOptions));
-                }
-            }
+            JsonSerializer.Serialize(dbfile, _serializerOptions);
         }
 
         public void Clear()
         {
-            using (var dbfile = OpenDb(FileAccess.ReadWrite, FileShare.None))
-            {
-                dbfile.Position = 0;
-                dbfile.SetLength(0);
+            using var dbfile = OpenDb(FileAccess.ReadWrite, FileShare.None);
+            dbfile.Position = 0;
+            dbfile.SetLength(0);
 
-                using (var sbsw = new StreamWriter(dbfile, Encoding.UTF8))
-                {
-                    sbsw.Write(JsonSerializer.Serialize(new List<UpcomingSatellitePass>(), _serializerOptions));
-                }
-            }
+            JsonSerializer.Serialize(dbfile, new List<UpcomingSatellitePass>(), _serializerOptions);
         }
 
         private FileStream OpenDb(FileAccess access, FileShare share)

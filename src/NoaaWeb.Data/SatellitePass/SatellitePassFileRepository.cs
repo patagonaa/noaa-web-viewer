@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Text.Json;
 using System.Threading;
 
@@ -43,38 +42,28 @@ namespace NoaaWeb.Data.SatellitePass
                 return _cache.AsQueryable();
             }
 
-            using (var dbsr = new StreamReader(OpenDb(FileAccess.Read, FileShare.Read), Encoding.UTF8))
-            {
-                var dbStr = dbsr.ReadToEnd();
-                var sw = Stopwatch.StartNew();
-                var db = (dbStr.Length == 0 ? null : JsonSerializer.Deserialize<IList<SatellitePass>>(dbStr, _serializerOptions)) ?? [];
-                _logger.LogInformation("DB deserialize took {ElapsedMilliseconds}ms", sw.ElapsedMilliseconds);
-                _cache = db;
-                _cacheTime = file.LastWriteTimeUtc;
-                return db.AsQueryable();
-            }
+            using var dbfile = OpenDb(FileAccess.Read, FileShare.Read);
+            var sw = Stopwatch.StartNew();
+            var db = (dbfile.Length == 0 ? null : JsonSerializer.Deserialize<IList<SatellitePass>>(dbfile, _serializerOptions)) ?? [];
+            _logger.LogInformation("DB deserialize took {ElapsedMilliseconds}ms", sw.ElapsedMilliseconds);
+            _cache = db;
+            _cacheTime = file.LastWriteTimeUtc;
+            return db.AsQueryable();
         }
 
         public void Insert(SatellitePass pass)
         {
             using var dbfile = OpenDb(FileAccess.ReadWrite, FileShare.None);
             var sw = Stopwatch.StartNew();
-            IList<SatellitePass> db;
-            using (var dbsr = new StreamReader(dbfile, Encoding.UTF8, false, 1024, true))
-            {
-                var dbStr = dbsr.ReadToEnd() ?? string.Empty;
-                db = (dbStr.Length == 0 ? null : JsonSerializer.Deserialize<IList<SatellitePass>>(dbStr, _serializerOptions)) ?? [];
-            }
+
+            var db = (dbfile.Length == 0 ? null : JsonSerializer.Deserialize<IList<SatellitePass>>(dbfile, _serializerOptions)) ?? [];
 
             db.Add(pass);
 
             dbfile.Position = 0;
             dbfile.SetLength(0);
 
-            using (var sbsw = new StreamWriter(dbfile, Encoding.UTF8, 1024, true))
-            {
-                sbsw.Write(JsonSerializer.Serialize(db, _serializerOptions));
-            }
+            JsonSerializer.Serialize(dbfile, db, _serializerOptions);
 
             _logger.LogInformation("DB insert took {ElapsedMilliseconds}ms", sw.ElapsedMilliseconds);
         }
