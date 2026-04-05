@@ -5,9 +5,9 @@ namespace NoaaWeb.App.Models
 {
     public class ProjectionItemViewModel
     {
-        public DateTime StartTime { get; set; }
-        public string FileKey { get; set; }
-        public string ImageDir { get; set; }
-        public ProjectionTypes ProjectionTypes { get; set; }
+        required public DateTime StartTime { get; set; }
+        required public string FileKey { get; set; }
+        required public string ImageDir { get; set; }
+        required public ProjectionTypes ProjectionTypes { get; set; }
     }
 }

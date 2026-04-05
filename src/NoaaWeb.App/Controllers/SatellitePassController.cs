@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Linq;
+﻿using System.Linq;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using NoaaWeb.App.Models;
@@ -46,7 +45,7 @@ namespace NoaaWeb.App.Controllers
                 ChannelA = x.ChannelA,
                 ChannelB = x.ChannelB,
                 MaxElevation = x.MaxElevation,
-                Gain = double.IsNaN(x.Gain) ? -1000 : x.Gain,
+                Gain = double.IsNaN(x.Gain ?? double.NaN) ? -1000 : x.Gain,
                 EnhancementTypes = x.EnhancementTypes,
                 ProjectionTypes = x.ProjectionTypes,
                 ThumbnailUri = x.ThumbnailUri,

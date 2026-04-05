@@ -6,6 +6,6 @@ namespace NoaaWeb.App.Models
     {
         public int Page { get; set; }
         public int PageCount { get; set; }
-        public IList<SatellitePassViewModel> Results { get; set; }
+        required public IList<SatellitePassViewModel> Results { get; set; }
     }
 }

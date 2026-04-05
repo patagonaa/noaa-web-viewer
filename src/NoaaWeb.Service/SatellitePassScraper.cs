@@ -120,7 +120,10 @@ namespace NoaaWeb.Service
                         }
 
                         var monthDir = _fileProvider.GetDirectoryContents($"{baseUrl}/meta/{year}/{month}");
-                        var monthImagesDir = _fileProvider.GetDirectoryContents($"{baseUrl}/images/{year}/{month}");
+
+                        var imageDir = $"{baseUrl}/images/{year}/{month}";
+
+                        var monthImagesDir = _fileProvider.GetDirectoryContents(imageDir);
 
                         _logger.LogInformation("scraping {ScrapeMonth}", $"{year}-{month}");
 
@@ -138,19 +141,6 @@ namespace NoaaWeb.Service
 
                             _logger.LogInformation("scraping {FileKey}", fileKey);
 
-                            var startTimeStr = fileKey.Substring(0, 15);
-                            var startTime = DateTime.ParseExact(startTimeStr, "yyyyMMdd-HHmmss", CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal);
-
-                            var imageDir = $"{baseUrl}/images/{year}/{month}";
-
-                            var rawImage = _fileProvider.GetFileInfo($"{imageDir}/{fileKey}-RAW.png");
-
-                            if (!rawImage.Exists)
-                            {
-                                _logger.LogInformation("no raw image for {FileKey}", fileKey);
-                                continue;
-                            }
-
                             var satName = fileKey.Substring(16);
 
                             string metaData;
@@ -160,137 +150,26 @@ namespace NoaaWeb.Service
                                 metaData = sr.ReadToEnd();
                             }
 
-                            var endTimeMatch = Regex.Match(metaData, @"^END_TIME=(.*)$", RegexOptions.Multiline);
-                            DateTime? endTime = null;
-                            if (endTimeMatch.Success)
+                            SatellitePass? toInsert = null;
+                            if (satName.Contains("NOAA", StringComparison.OrdinalIgnoreCase))
                             {
-                                endTime = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc).AddSeconds(double.Parse(endTimeMatch.Groups[1].Value));
+                                toInsert = GetNoaaPass(site, fileKey, satName, metaData, imageDir, monthImagesDir);
+                            }
+                            else
+                            {
+                                toInsert = GetNonNoaaPass(site, fileKey, satName, metaData, imageDir, monthImagesDir);
                             }
 
-                            Match channelAMatch = Regex.Match(metaData, @"^CHAN_A=Channel A: (.*) \(.*\)$", RegexOptions.Multiline);
-                            Match channelBMatch = Regex.Match(metaData, @"^CHAN_B=Channel B: (.*) \(.*\)$", RegexOptions.Multiline);
-                            Match gainMatch = Regex.Match(metaData, @"^GAIN=Gain: (.*)$", RegexOptions.Multiline);
-                            Match maxElevMatch = Regex.Match(metaData, @"^MAXELEV=(.*)$", RegexOptions.Multiline);
-
-                            if (!channelAMatch.Success ||
-                                !channelBMatch.Success ||
-                                !gainMatch.Success || !double.TryParse(gainMatch.Groups[1].Value, NumberStyles.Float, CultureInfo.InvariantCulture, out var gainRaw) || double.IsNaN(gainRaw) ||
-                                !maxElevMatch.Success || !int.TryParse(maxElevMatch.Groups[1].Value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var maxElev))
+                            if (toInsert == null)
                             {
-                                _logger.LogInformation("metadata invalid for {FileKey}", fileKey);
-                                _invalidMetaPasses.Add(GetUniquePassKey(site, fileKey));
                                 continue;
                             }
-
-                            var channelA = channelAMatch.Groups[1].Value;
-                            var channelB = channelBMatch.Groups[1].Value;
-                            var gain = -gainRaw;
-
-                            var enhancementTypes = EnhancementTypes.None;
-
-                            if (new[] { channelA, channelB }.Any(x => x == "4") && new[] { channelA, channelB }.Any(x => x == "1" || x == "2"))
-                            {
-                                enhancementTypes |= EnhancementTypes.Msa;
-                            }
-                            else
-                            {
-                                if (monthImagesDir.Any(x => x.Name == $"{fileKey}-MSA.png"))
-                                    _fileProvider.DeleteFile($"{imageDir}/{fileKey}-MSA.png");
-                                if (monthImagesDir.Any(x => x.Name == $"{fileKey}-MSA-merc.png"))
-                                    _fileProvider.DeleteFile($"{imageDir}/{fileKey}-MSA-merc.png");
-                                if (monthImagesDir.Any(x => x.Name == $"{fileKey}-MSA-stereo.png"))
-                                    _fileProvider.DeleteFile($"{imageDir}/{fileKey}-MSA-stereo.png");
-                            }
-
-                            if (new[] { channelA, channelB }.Any(x => x == "4"))
-                            {
-                                enhancementTypes |= EnhancementTypes.Mcir;
-                                enhancementTypes |= EnhancementTypes.Therm;
-                                enhancementTypes |= EnhancementTypes.Za;
-                                enhancementTypes |= EnhancementTypes.No;
-                            }
-                            else
-                            {
-                                if (monthImagesDir.Any(x => x.Name == $"{fileKey}-MCIR.png"))
-                                    _fileProvider.DeleteFile($"{imageDir}/{fileKey}-MCIR.png");
-                                if (monthImagesDir.Any(x => x.Name == $"{fileKey}-THERM.png"))
-                                    _fileProvider.DeleteFile($"{imageDir}/{fileKey}-THERM.png");
-                                if (monthImagesDir.Any(x => x.Name == $"{fileKey}-ZA.png"))
-                                    _fileProvider.DeleteFile($"{imageDir}/{fileKey}-ZA.png");
-                                if (monthImagesDir.Any(x => x.Name == $"{fileKey}-NO.png"))
-                                    _fileProvider.DeleteFile($"{imageDir}/{fileKey}-NO.png");
-                                if (monthImagesDir.Any(x => x.Name == $"{fileKey}-THERM-merc.png"))
-                                    _fileProvider.DeleteFile($"{imageDir}/{fileKey}-THERM-merc.png");
-                                if (monthImagesDir.Any(x => x.Name == $"{fileKey}-THERM-stereo.png"))
-                                    _fileProvider.DeleteFile($"{imageDir}/{fileKey}-THERM-stereo.png");
-                            }
-
-                            var projectionTypes = ProjectionTypes.None;
-
-                            if (enhancementTypes.HasFlag(EnhancementTypes.Msa) && monthImagesDir.Any(x => x.Name == $"{fileKey}-MSA-merc.png"))
-                            {
-                                projectionTypes |= ProjectionTypes.MsaMercator;
-                            }
-
-                            if (enhancementTypes.HasFlag(EnhancementTypes.Msa) && monthImagesDir.Any(x => x.Name == $"{fileKey}-MSA-stereo.png"))
-                            {
-                                projectionTypes |= ProjectionTypes.MsaStereographic;
-                            }
-
-                            if (enhancementTypes.HasFlag(EnhancementTypes.Therm) && monthImagesDir.Any(x => x.Name == $"{fileKey}-THERM-merc.png"))
-                            {
-                                projectionTypes |= ProjectionTypes.ThermMercator;
-                            }
-
-                            if (enhancementTypes.HasFlag(EnhancementTypes.Therm) && monthImagesDir.Any(x => x.Name == $"{fileKey}-THERM-stereo.png"))
-                            {
-                                projectionTypes |= ProjectionTypes.ThermStereographic;
-                            }
-
-                            var toInsert = new SatellitePass
-                            {
-                                Site = site,
-                                ImageDir = imageDir,
-                                FileKey = fileKey,
-                                StartTime = startTime,
-                                EndTime = endTime,
-                                SatelliteName = satName,
-                                ChannelA = channelA,
-                                ChannelB = channelB,
-                                Gain = gain,
-                                MaxElevation = maxElev,
-                                EnhancementTypes = enhancementTypes,
-                                ProjectionTypes = projectionTypes
-                            };
-
-                            IFileInfo thumbnailSource = null;
-                            string thumbnailEnhancementType = null;
-                            if (enhancementTypes.HasFlag(EnhancementTypes.Msa))
-                            {
-                                var msaImage = _fileProvider.GetFileInfo($"{imageDir}/{fileKey}-MSA.png");
-
-                                if (msaImage.Exists)
-                                {
-                                    thumbnailSource = msaImage;
-                                    thumbnailEnhancementType = "MSA";
-                                }
-                            }
-                            if (thumbnailSource == null)
-                            {
-                                thumbnailSource = rawImage;
-                                thumbnailEnhancementType = "RAW";
-                            }
-
-                            using (var imageStream = thumbnailSource.CreateReadStream())
-                            {
-                                toInsert.ThumbnailUri = GetThumbnail(imageStream);
-                                toInsert.ThumbnailEnhancementType = thumbnailEnhancementType;
-                            }
+                            _passCounter.WithLabels(satName).Inc();
+                            if (toInsert.EndTime.HasValue)
+                                _passDurationCounter.WithLabels(satName).Inc((toInsert.EndTime.Value - toInsert.StartTime).TotalSeconds);
 
                             _satellitePassRepository.Insert(toInsert);
-                            _passCounter.WithLabels(satName).Inc();
-                            if (endTime.HasValue)
-                                _passDurationCounter.WithLabels(satName).Inc((endTime.Value - startTime).TotalSeconds);
+
                             _logger.LogInformation("{FileKey} successfully scraped", fileKey);
 
                             _lastSuccessfulScrape[site] = (dirYear, dirMonth);
@@ -310,12 +189,152 @@ namespace NoaaWeb.Service
             _logger.LogInformation("scrape done!");
         }
 
+        private SatellitePass? GetNonNoaaPass(string site, string fileKey, string satName, string metaData, string imagesDir, IDirectoryContents imagesDirContents)
+        {
+            return null; // TODO
+        }
+
+        private SatellitePass? GetNoaaPass(string site, string fileKey, string satName, string metaData, string imagesDir, IDirectoryContents imagesDirContents)
+        {
+            var startTimeStr = fileKey.Substring(0, 15);
+            var startTime = DateTime.ParseExact(startTimeStr, "yyyyMMdd-HHmmss", CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal);
+
+            var rawImage = _fileProvider.GetFileInfo($"{imagesDir}/{fileKey}-RAW.png");
+
+            if (!rawImage.Exists)
+            {
+                _logger.LogInformation("no raw image for {FileKey}", fileKey);
+                return null;
+            }
+
+            var endTimeMatch = Regex.Match(metaData, @"^END_TIME=(.*)$", RegexOptions.Multiline);
+            DateTime? endTime = null;
+            if (endTimeMatch.Success)
+            {
+                endTime = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc).AddSeconds(double.Parse(endTimeMatch.Groups[1].Value));
+            }
+
+            Match channelAMatch = Regex.Match(metaData, @"^CHAN_A=Channel A: (.*) \(.*\)$", RegexOptions.Multiline);
+            Match channelBMatch = Regex.Match(metaData, @"^CHAN_B=Channel B: (.*) \(.*\)$", RegexOptions.Multiline);
+            Match gainMatch = Regex.Match(metaData, @"^GAIN=Gain: (.*)$", RegexOptions.Multiline);
+            Match maxElevMatch = Regex.Match(metaData, @"^MAXELEV=(.*)$", RegexOptions.Multiline);
+
+            if (!channelAMatch.Success ||
+                !channelBMatch.Success ||
+                !gainMatch.Success || !double.TryParse(gainMatch.Groups[1].Value, NumberStyles.Float, CultureInfo.InvariantCulture, out var gainRaw) || double.IsNaN(gainRaw) ||
+                !maxElevMatch.Success || !int.TryParse(maxElevMatch.Groups[1].Value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var maxElev))
+            {
+                _logger.LogInformation("metadata invalid for {FileKey}", fileKey);
+                _invalidMetaPasses.Add(GetUniquePassKey(site, fileKey));
+                return null;
+            }
+
+            var channelA = channelAMatch.Groups[1].Value;
+            var channelB = channelBMatch.Groups[1].Value;
+            var gain = -gainRaw;
+
+            var enhancementTypes = EnhancementTypes.None;
+
+            if (new[] { channelA, channelB }.Any(x => x == "4") && new[] { channelA, channelB }.Any(x => x == "1" || x == "2"))
+            {
+                enhancementTypes |= EnhancementTypes.Msa;
+            }
+            else
+            {
+                var types = new List<string> { "MSA", "MSA-merc", "MSA-stereo" };
+                foreach (var toDelete in imagesDirContents.Where(x => types.Any(type => $"{fileKey}-{type}.png" == x.Name)))
+                {
+                    _fileProvider.DeleteFile(Path.Join(imagesDir, toDelete.Name));
+                }
+            }
+
+            if (new[] { channelA, channelB }.Any(x => x == "4"))
+            {
+                enhancementTypes |= EnhancementTypes.Mcir;
+                enhancementTypes |= EnhancementTypes.Therm;
+                enhancementTypes |= EnhancementTypes.Za;
+                enhancementTypes |= EnhancementTypes.No;
+            }
+            else
+            {
+                var types = new List<string> { "MCIR", "THERM", "ZA", "NO", "THERM-merc", "THERM-stereo" };
+                foreach (var toDelete in imagesDirContents.Where(x => types.Any(type => $"{fileKey}-{type}.png" == x.Name)))
+                {
+                    _fileProvider.DeleteFile(Path.Join(imagesDir, toDelete.Name));
+                }
+            }
+
+            var projectionTypes = ProjectionTypes.None;
+
+            if (enhancementTypes.HasFlag(EnhancementTypes.Msa) && imagesDirContents.Any(x => x.Name == $"{fileKey}-MSA-merc.png"))
+            {
+                projectionTypes |= ProjectionTypes.MsaMercator;
+            }
+
+            if (enhancementTypes.HasFlag(EnhancementTypes.Msa) && imagesDirContents.Any(x => x.Name == $"{fileKey}-MSA-stereo.png"))
+            {
+                projectionTypes |= ProjectionTypes.MsaStereographic;
+            }
+
+            if (enhancementTypes.HasFlag(EnhancementTypes.Therm) && imagesDirContents.Any(x => x.Name == $"{fileKey}-THERM-merc.png"))
+            {
+                projectionTypes |= ProjectionTypes.ThermMercator;
+            }
+
+            if (enhancementTypes.HasFlag(EnhancementTypes.Therm) && imagesDirContents.Any(x => x.Name == $"{fileKey}-THERM-stereo.png"))
+            {
+                projectionTypes |= ProjectionTypes.ThermStereographic;
+            }
+
+            var toInsert = new SatellitePass
+            {
+                Site = site,
+                ImageDir = imagesDir,
+                FileKey = fileKey,
+                StartTime = startTime,
+                EndTime = endTime,
+                SatelliteName = satName,
+                ChannelA = channelA,
+                ChannelB = channelB,
+                Gain = gain,
+                MaxElevation = maxElev,
+                EnhancementTypes = enhancementTypes,
+                ProjectionTypes = projectionTypes
+            };
+
+            IFileInfo? thumbnailSource = null;
+            string? thumbnailEnhancementType = null;
+            if (enhancementTypes.HasFlag(EnhancementTypes.Msa))
+            {
+                var msaImage = _fileProvider.GetFileInfo($"{imagesDir}/{fileKey}-MSA.png");
+
+                if (msaImage.Exists)
+                {
+                    thumbnailSource = msaImage;
+                    thumbnailEnhancementType = "MSA";
+                }
+            }
+            if (thumbnailSource == null)
+            {
+                thumbnailSource = rawImage;
+                thumbnailEnhancementType = "RAW";
+            }
+
+            using (var imageStream = thumbnailSource.CreateReadStream())
+            {
+                toInsert.ThumbnailUri = GetThumbnail(imageStream);
+                toInsert.ThumbnailEnhancementType = thumbnailEnhancementType;
+            }
+
+            return toInsert;
+        }
+
         private static string GetUniquePassKey(string site, string fileKey)
         {
             return $"{site}/{fileKey}";
         }
 
-        private string GetThumbnail(Stream file)
+        private string? GetThumbnail(Stream file)
         {
             var thumbHeight = 200;
 
@@ -330,7 +349,10 @@ namespace NoaaWeb.Service
                         var encoderParameters = new EncoderParameters(1);
                         encoderParameters.Param[0] = new EncoderParameter(Encoder.Quality, 70L);
 
-                        thumb.Save(ms, GetEncoder(ImageFormat.Jpeg), encoderParameters);
+                        var encoder = GetEncoder(ImageFormat.Jpeg);
+                        if (encoder == null)
+                            return null;
+                        thumb.Save(ms, encoder, encoderParameters);
 
                         return $"data:image/jpeg;base64,{Convert.ToBase64String(ms.ToArray())}";
                     }
@@ -338,7 +360,7 @@ namespace NoaaWeb.Service
             }
         }
 
-        private static ImageCodecInfo GetEncoder(ImageFormat format)
+        private static ImageCodecInfo? GetEncoder(ImageFormat format)
         {
             var codecs = ImageCodecInfo.GetImageDecoders();
             foreach (var codec in codecs)

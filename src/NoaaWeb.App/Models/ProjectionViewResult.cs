@@ -4,8 +4,8 @@ namespace NoaaWeb.App.Models
 {
     public class ProjectionViewResult
     {
-        public IList<ProjectionItemViewModel> Past { get; set; }
-        public ProjectionItemViewModel Current { get; set; }
-        public IList<ProjectionItemViewModel> Future { get; set; }
+        required public IList<ProjectionItemViewModel> Past { get; set; }
+        required public ProjectionItemViewModel Current { get; set; }
+        required public IList<ProjectionItemViewModel> Future { get; set; }
     }
 }
