@@ -41,7 +41,7 @@ namespace NoaaWeb.Data.UpcomingPass
             dbfile.Position = 0;
             dbfile.SetLength(0);
 
-            JsonSerializer.Serialize(dbfile, _serializerOptions);
+            JsonSerializer.Serialize(dbfile, db, _serializerOptions);
         }
 
         public void Clear()
