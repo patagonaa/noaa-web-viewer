@@ -4,6 +4,6 @@ namespace NoaaWeb.Data
 {
     public class SiteConfiguration
     {
-        public IList<string> Sites { get; set; }
+        required public IList<string> Sites { get; set; }
     }
 }

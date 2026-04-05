@@ -2,6 +2,6 @@
 {
     public class FileDbConfiguration
     {
-        public string DbDirectory { get; set; }
+        required public string DbDirectory { get; set; }
     }
 }

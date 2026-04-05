@@ -13,11 +13,13 @@ namespace NoaaWeb.Service
     {
         private readonly Timer _timer;
 
-        private readonly CancellationTokenSource _cts = new CancellationTokenSource();
+        private readonly CancellationTokenSource _cts = new();
         private readonly InfluxMetricsSender _sender;
 
         public InfluxMetricsHost(InfluxMetricsSender sender)
         {
+            _sender = sender;
+
             _timer = new Timer
             {
                 Interval = 1000 * 60 * 15, // 15 minutes
@@ -27,7 +29,6 @@ namespace NoaaWeb.Service
             {
                 _ = _sender.Send(_cts.Token);
             };
-            _sender = sender;
         }
 
         public Task StartAsync(CancellationToken cancellationToken)

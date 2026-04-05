@@ -16,7 +16,7 @@ namespace NoaaWeb.Service
         private readonly SemaphoreSlim _sendLock = new SemaphoreSlim(1, 1);
         private readonly ILogger<InfluxMetricsSender> _logger;
         private readonly ISatellitePassRepository _passRepository;
-        private readonly LineProtocolClient _client;
+        private readonly LineProtocolClient? _client;
         private DateTime _lastPass = DateTime.MinValue;
 
         public InfluxMetricsSender(ILogger<InfluxMetricsSender> logger, ISatellitePassRepository passRepository, IOptions<InfluxMetricsConfiguration> options)

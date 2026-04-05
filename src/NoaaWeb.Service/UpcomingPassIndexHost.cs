@@ -14,13 +14,13 @@ namespace NoaaWeb.Service
 
         public UpcomingPassIndexHost(UpcomingPassScraper scraper)
         {
+            _scraper = scraper;
             _timer = new Timer
             {
                 Interval = 1000 * 60 * 15, // 15 minutes
                 AutoReset = true
             };
             _timer.Elapsed += (sender, e) => _scraper.Scrape(_cts.Token);
-            _scraper = scraper;
         }
 
         public Task StartAsync(CancellationToken cancellationToken)

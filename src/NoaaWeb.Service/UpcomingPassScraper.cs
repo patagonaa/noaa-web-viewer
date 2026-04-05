@@ -55,7 +55,7 @@ namespace NoaaWeb.Service
             }
         }
 
-        private IList<UpcomingSatellitePass> Scrape(string site)
+        private IList<UpcomingSatellitePass>? Scrape(string site)
         {
             var upcomingPassFileInfo = _fileProvider.GetFileInfo(site == "" ? "/upcoming_passes.txt" : $"/{site}/upcoming_passes.txt");
             if (!upcomingPassFileInfo.Exists)
@@ -74,7 +74,7 @@ namespace NoaaWeb.Service
             var toReturn = new List<UpcomingSatellitePass>();
             using (var sr = new StreamReader(upcomingPassFileInfo.CreateReadStream(), Encoding.UTF8))
             {
-                string line;
+                string? line;
                 while ((line = sr.ReadLine()) != null)
                 {
                     if (string.IsNullOrWhiteSpace(line))
