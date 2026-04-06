@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text.Json.Serialization;
 
 namespace NoaaWeb.Data.SatellitePass
 {
@@ -15,6 +16,7 @@ namespace NoaaWeb.Data.SatellitePass
         public double? Gain { get; set; }
         required public ImageTypes ImageTypes { get; set; }
         required public ProjectionTypes ProjectionTypes { get; set; }
+        [JsonIgnore]
         public string? ThumbnailUri { get; set; }
         public string? ThumbnailImageType { get; set; }
         required public string ImageDir { get; set; }
