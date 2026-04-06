@@ -270,6 +270,7 @@ namespace NoaaWeb.Service
                 channelA = channelAMatch.Groups[1].Value;
                 channelB = channelBMatch.Groups[1].Value;
                 gain = -gainRaw;
+                maxElev = maxElevRaw;
 
 
                 if (new[] { channelA, channelB }.Any(x => x == "4") && new[] { channelA, channelB }.Any(x => x == "1" || x == "2"))
