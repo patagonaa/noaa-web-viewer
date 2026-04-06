@@ -1,15 +1,15 @@
-﻿using FileProviders.WebDav;
-using Microsoft.Extensions.FileProviders;
+﻿using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using NoaaWeb.Data;
 using NoaaWeb.Data.SatellitePass;
 using Prometheus;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Formats.Jpeg;
+using SixLabors.ImageSharp.Processing;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Drawing;
-using System.Drawing.Imaging;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -371,39 +371,12 @@ namespace NoaaWeb.Service
         {
             var thumbHeight = 200;
 
-            using (var image = Image.FromStream(file))
-            {
-                var thumbWidth = (int)((double)image.Width / image.Height * thumbHeight);
+            using var image = Image.Load(file);
+            using var ms = new MemoryStream();
+            image.Mutate(x => x.Resize(thumbHeight, 0, KnownResamplers.Lanczos3));
+            image.SaveAsJpeg(ms, new JpegEncoder() { Quality = 70 });
 
-                using (var thumb = image.GetThumbnailImage(thumbWidth, thumbHeight, () => false, IntPtr.Zero))
-                {
-                    using (var ms = new MemoryStream())
-                    {
-                        var encoderParameters = new EncoderParameters(1);
-                        encoderParameters.Param[0] = new EncoderParameter(Encoder.Quality, 70L);
-
-                        var encoder = GetEncoder(ImageFormat.Jpeg);
-                        if (encoder == null)
-                            return null;
-                        thumb.Save(ms, encoder, encoderParameters);
-
-                        return $"data:image/jpeg;base64,{Convert.ToBase64String(ms.ToArray())}";
-                    }
-                }
-            }
-        }
-
-        private static ImageCodecInfo? GetEncoder(ImageFormat format)
-        {
-            var codecs = ImageCodecInfo.GetImageDecoders();
-            foreach (var codec in codecs)
-            {
-                if (codec.FormatID == format.Guid)
-                {
-                    return codec;
-                }
-            }
-            return null;
+            return $"data:image/jpeg;base64,{Convert.ToBase64String(ms.ToArray())}";
         }
     }
 }
