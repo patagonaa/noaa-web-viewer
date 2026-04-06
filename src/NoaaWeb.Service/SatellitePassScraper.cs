@@ -194,7 +194,7 @@ namespace NoaaWeb.Service
             var startTimeStr = fileKey.Substring(0, 15);
             var startTime = DateTime.ParseExact(startTimeStr, "yyyyMMdd-HHmmss", CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal);
 
-            var msaImage = _fileProvider.GetFileInfo($"{imagesDir}/{fileKey}-RAW.png");
+            var msaImage = _fileProvider.GetFileInfo($"{imagesDir}/{fileKey}-MSA.png");
 
             if (!msaImage.Exists)
             {
