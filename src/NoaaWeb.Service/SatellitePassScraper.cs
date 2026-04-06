@@ -28,7 +28,7 @@ namespace NoaaWeb.Service
         private readonly Counter _scrapeDurationCounter;
         private readonly Counter _passCounter;
         private readonly Counter _passDurationCounter;
-        private readonly IList<string> _invalidMetaPasses = new List<string>();
+        private readonly IList<string> _invalidPasses = new List<string>();
         private readonly object _scrapeLock = new object();
 
         public SatellitePassScraper(ILogger<SatellitePassScraper> logger, IOptions<SiteConfiguration> siteConfig, ISatellitePassRepository satellitePassRepository, NoaaWebDavFileProvider fileProvider)
@@ -134,14 +134,14 @@ namespace NoaaWeb.Service
 
                             var fileKey = Path.GetFileNameWithoutExtension(metaFileInfo.Name);
 
-                            if (existingPasses.Contains(GetUniquePassKey(site, fileKey)) || _invalidMetaPasses.Contains(GetUniquePassKey(site, fileKey)))
+                            if (existingPasses.Contains(GetUniquePassKey(site, fileKey)) || _invalidPasses.Contains(GetUniquePassKey(site, fileKey)))
                             {
                                 continue;
                             }
 
                             _logger.LogInformation("scraping {FileKey}", fileKey);
 
-                            var satName = fileKey.Substring(16);
+                            var satName = fileKey[16..];
 
                             string metaData;
 
@@ -191,7 +191,7 @@ namespace NoaaWeb.Service
 
         private SatellitePass? GetNonNoaaPass(string site, string fileKey, string satName, string metaData, string imagesDir, IDirectoryContents imagesDirContents)
         {
-            var startTimeStr = fileKey.Substring(0, 15);
+            var startTimeStr = fileKey[..15];
             var startTime = DateTime.ParseExact(startTimeStr, "yyyyMMdd-HHmmss", CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal);
 
             var msaImage = _fileProvider.GetFileInfo($"{imagesDir}/{fileKey}-MSA.png");
@@ -199,6 +199,7 @@ namespace NoaaWeb.Service
             if (!msaImage.Exists)
             {
                 _logger.LogInformation("no msa image for {FileKey}", fileKey);
+                _invalidPasses.Add(GetUniquePassKey(site, fileKey));
                 return null;
             }
 
@@ -229,7 +230,7 @@ namespace NoaaWeb.Service
 
         private SatellitePass? GetNoaaPass(string site, string fileKey, string satName, string metaData, string imagesDir, IDirectoryContents imagesDirContents)
         {
-            var startTimeStr = fileKey.Substring(0, 15);
+            var startTimeStr = fileKey[..15];
             var startTime = DateTime.ParseExact(startTimeStr, "yyyyMMdd-HHmmss", CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal);
 
             var rawImage = _fileProvider.GetFileInfo($"{imagesDir}/{fileKey}-RAW.png");
@@ -237,6 +238,7 @@ namespace NoaaWeb.Service
             if (!rawImage.Exists)
             {
                 _logger.LogInformation("no raw image for {FileKey}", fileKey);
+                _invalidPasses.Add(GetUniquePassKey(site, fileKey));
                 return null;
             }
 
@@ -252,71 +254,77 @@ namespace NoaaWeb.Service
             Match gainMatch = Regex.Match(metaData, @"^GAIN=Gain: (.*)$", RegexOptions.Multiline);
             Match maxElevMatch = Regex.Match(metaData, @"^MAXELEV=(.*)$", RegexOptions.Multiline);
 
-            if (!channelAMatch.Success ||
-                !channelBMatch.Success ||
-                !gainMatch.Success || !double.TryParse(gainMatch.Groups[1].Value, NumberStyles.Float, CultureInfo.InvariantCulture, out var gainRaw) || double.IsNaN(gainRaw) ||
-                !maxElevMatch.Success || !int.TryParse(maxElevMatch.Groups[1].Value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var maxElev))
-            {
-                _logger.LogInformation("metadata invalid for {FileKey}", fileKey);
-                _invalidMetaPasses.Add(GetUniquePassKey(site, fileKey));
-                return null;
-            }
-
-            var channelA = channelAMatch.Groups[1].Value;
-            var channelB = channelBMatch.Groups[1].Value;
-            var gain = -gainRaw;
-
+            string? channelA = null;
+            string? channelB = null;
+            double? gain = null;
+            int? maxElev = null;
             var imageTypes = ImageTypes.Raw;
-
-            if (new[] { channelA, channelB }.Any(x => x == "4") && new[] { channelA, channelB }.Any(x => x == "1" || x == "2"))
-            {
-                imageTypes |= ImageTypes.Msa;
-            }
-            else
-            {
-                var types = new List<string> { "MSA", "MSA-merc", "MSA-stereo" };
-                foreach (var toDelete in imagesDirContents.Where(x => types.Any(type => $"{fileKey}-{type}.png" == x.Name)))
-                {
-                    _fileProvider.DeleteFile(Path.Join(imagesDir, toDelete.Name));
-                }
-            }
-
-            if (new[] { channelA, channelB }.Any(x => x == "4"))
-            {
-                imageTypes |= ImageTypes.Mcir;
-                imageTypes |= ImageTypes.Therm;
-                imageTypes |= ImageTypes.Za;
-                imageTypes |= ImageTypes.No;
-            }
-            else
-            {
-                var types = new List<string> { "MCIR", "THERM", "ZA", "NO", "THERM-merc", "THERM-stereo" };
-                foreach (var toDelete in imagesDirContents.Where(x => types.Any(type => $"{fileKey}-{type}.png" == x.Name)))
-                {
-                    _fileProvider.DeleteFile(Path.Join(imagesDir, toDelete.Name));
-                }
-            }
-
             var projectionTypes = ProjectionTypes.None;
 
-            if (imageTypes.HasFlag(ImageTypes.Msa) && imagesDirContents.Any(x => x.Name == $"{fileKey}-MSA-merc.png"))
-            {
-                projectionTypes |= ProjectionTypes.MsaMercator;
-            }
 
-            if (imageTypes.HasFlag(ImageTypes.Msa) && imagesDirContents.Any(x => x.Name == $"{fileKey}-MSA-stereo.png"))
+            if (channelAMatch.Success &&
+                channelBMatch.Success &&
+                gainMatch.Success && double.TryParse(gainMatch.Groups[1].Value, NumberStyles.Float, CultureInfo.InvariantCulture, out var gainRaw) && !double.IsNaN(gainRaw) &&
+                maxElevMatch.Success && int.TryParse(maxElevMatch.Groups[1].Value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var maxElevRaw))
             {
-                projectionTypes |= ProjectionTypes.MsaStereographic;
-            }
+                channelA = channelAMatch.Groups[1].Value;
+                channelB = channelBMatch.Groups[1].Value;
+                gain = -gainRaw;
 
-            if (imageTypes.HasFlag(ImageTypes.Therm) && imagesDirContents.Any(x => x.Name == $"{fileKey}-THERM-merc.png"))
-            {
-                projectionTypes |= ProjectionTypes.ThermMercator;
-            }
 
-            if (imageTypes.HasFlag(ImageTypes.Therm) && imagesDirContents.Any(x => x.Name == $"{fileKey}-THERM-stereo.png"))
+                if (new[] { channelA, channelB }.Any(x => x == "4") && new[] { channelA, channelB }.Any(x => x == "1" || x == "2"))
+                {
+                    imageTypes |= ImageTypes.Msa;
+                }
+                else
+                {
+                    var types = new List<string> { "MSA", "MSA-merc", "MSA-stereo" };
+                    foreach (var toDelete in imagesDirContents.Where(x => types.Any(type => $"{fileKey}-{type}.png" == x.Name)))
+                    {
+                        _fileProvider.DeleteFile(Path.Join(imagesDir, toDelete.Name));
+                    }
+                }
+
+                if (new[] { channelA, channelB }.Any(x => x == "4"))
+                {
+                    imageTypes |= ImageTypes.Mcir;
+                    imageTypes |= ImageTypes.Therm;
+                    imageTypes |= ImageTypes.Za;
+                    imageTypes |= ImageTypes.No;
+                }
+                else
+                {
+                    var types = new List<string> { "MCIR", "THERM", "ZA", "NO", "THERM-merc", "THERM-stereo" };
+                    foreach (var toDelete in imagesDirContents.Where(x => types.Any(type => $"{fileKey}-{type}.png" == x.Name)))
+                    {
+                        _fileProvider.DeleteFile(Path.Join(imagesDir, toDelete.Name));
+                    }
+                }
+
+
+                if (imageTypes.HasFlag(ImageTypes.Msa) && imagesDirContents.Any(x => x.Name == $"{fileKey}-MSA-merc.png"))
+                {
+                    projectionTypes |= ProjectionTypes.MsaMercator;
+                }
+
+                if (imageTypes.HasFlag(ImageTypes.Msa) && imagesDirContents.Any(x => x.Name == $"{fileKey}-MSA-stereo.png"))
+                {
+                    projectionTypes |= ProjectionTypes.MsaStereographic;
+                }
+
+                if (imageTypes.HasFlag(ImageTypes.Therm) && imagesDirContents.Any(x => x.Name == $"{fileKey}-THERM-merc.png"))
+                {
+                    projectionTypes |= ProjectionTypes.ThermMercator;
+                }
+
+                if (imageTypes.HasFlag(ImageTypes.Therm) && imagesDirContents.Any(x => x.Name == $"{fileKey}-THERM-stereo.png"))
+                {
+                    projectionTypes |= ProjectionTypes.ThermStereographic;
+                }
+            }
+            else
             {
-                projectionTypes |= ProjectionTypes.ThermStereographic;
+                _logger.LogWarning("Invalid metadata, continuing with just raw image.");
             }
 
             var toInsert = new SatellitePass
