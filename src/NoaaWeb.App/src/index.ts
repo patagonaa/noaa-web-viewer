@@ -147,7 +147,7 @@ interface SatellitePassViewModel {
     satelliteName: string;
     channelA: string;
     channelB: string;
-    maxElevation: number;
+    maxElevation?: number;
     gain?: number;
     imageTypes?: ImageTypes;
     thumbnailUri: string;

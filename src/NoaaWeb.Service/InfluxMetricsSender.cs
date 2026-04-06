@@ -91,7 +91,7 @@ namespace NoaaWeb.Service
             {
                 {"enhancementTypes", (int)pass.ImageTypes},
                 {"projectionTypes", (int)pass.ProjectionTypes},
-                {"gain", pass.Gain },
+                {"gain", pass.Gain ?? 0.0 },
                 {"maxElevation", pass.MaxElevation }
             };
             if (pass.EndTime.HasValue)
